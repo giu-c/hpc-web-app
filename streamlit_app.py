@@ -423,7 +423,7 @@ def build_payload(data, groups, city_ids, arch_values, vcpu, ram,
 # ---------------------------- UI (Streamlit) ---------------------------------
 
 st.set_page_config(
-    page_title="HPC — AWS vs OCI",
+    page_title="HPC - AWS vs OCI",
     page_icon="🌍",
     layout="wide",
     initial_sidebar_state="expanded",
