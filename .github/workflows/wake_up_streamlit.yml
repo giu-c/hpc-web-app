@@ -1,0 +1,47 @@
+name: Wake Up Streamlit (Playwright)
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Ogni 6 ore
+  workflow_dispatch:      # Permette l'avvio manuale per test
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: |
+          npm install playwright
+          npx playwright install chromium --with-deps
+
+      - name: Run Headless Browser
+        run: |
+          node -e "
+          const { chromium } = require('playwright');
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage();
+            console.log('Navigazione verso l' + ' app...');
+            try {
+              // URL aggiornato: cloudbattle.streamlit.app
+              await page.goto('https://cloudbattle.streamlit.app/', { waitUntil: 'networkidle', timeout: 60000 });
+              console.log('Pagina caricata correttamente');
+              
+              // Aspettiamo che il WebSocket di Streamlit si stabilizzi
+              await page.waitForTimeout(10000); 
+              console.log('Sessione stabilita. App sveglia!');
+            } catch (e) {
+              console.error('Errore durante il caricamento:', e.message);
+              process.exit(1);
+            }
+            await browser.close();
+          })();
+          "
