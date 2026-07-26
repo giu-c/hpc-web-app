@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body {
+    margin: 0; padding: 0; overflow: hidden; background: #04060d;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  #globeViz { width: 100%; height: 100vh; }
+
+  /* Priorità di sovrapposizione. Il renderer dei marker riassegna gli
+     z-index inline a ogni frame (ordinamento per profondità): le regole di
+     foglio di stile con !important vincono sempre sugli stili inline, quindi
+     la priorità resta stabile. Hover sopra a tutto: tooltip sempre leggibile. */
+  .z-nd    { z-index: 10 !important; }
+  .z-oci   { z-index: 20 !important; }
+  .z-aws   { z-index: 30 !important; }
+  .z-sel   { z-index: 50 !important; }
+  .z-hover { z-index: 1000 !important; }
+
+  /* --- Marker (pin) ------------------------------------------------------ */
+  .mk {
+    position: relative;
+    transform: translateY(-50%);      /* la punta del pin coincide con lat/lng */
+    display: flex; flex-direction: column; align-items: center;
+    cursor: pointer;
+  }
+  .pin {
+    transition: transform .15s ease;
+    transform-origin: 50% 100%;
+    filter: drop-shadow(0 0 6px var(--c));
+  }
+  .mk:hover .pin { transform: scale(1.22); }
+  .mk.sel .pin   { transform: scale(1.28); }
+
+  /* Coppia migliore (AWS più economica + OCI più vicina): brilla e pulsa */
+  .mk.hl .pin {
+    animation: glow 1.4s ease-in-out infinite;
+  }
+  @keyframes glow {
+    0%, 100% { filter: drop-shadow(0 0 6px var(--c)); }
+    50%      { filter: drop-shadow(0 0 16px #ffd166) brightness(1.4); }
+  }
+
+  .ring {
+    position: absolute; left: 50%; bottom: -5px;
+    width: 26px; height: 26px; margin-left: -13px;
+    border: 2px solid rgba(255, 255, 255, .9); border-radius: 50%;
+    animation: pulse 1.6s ease-out infinite;
+    pointer-events: none;
+  }
+  .ring.gold { border-color: #ffd166; }
+  @keyframes pulse {
+    0%   { transform: scale(.35); opacity: .95; }
+    100% { transform: scale(1.7); opacity: 0; }
+  }
+
+  .tip {
+    position: absolute; bottom: calc(100% + 8px); left: 50%;
+    transform: translateX(-50%);
+    background: rgba(9, 13, 24, .94); color: #e8eefc;
+    border: 1px solid rgba(94, 231, 223, .4); border-radius: 8px;
+    padding: 5px 9px; font-size: 12px; line-height: 1.45;
+    white-space: nowrap; opacity: 0; pointer-events: none;
+    transition: opacity .12s ease;
+  }
+  .mk:hover .tip { opacity: 1; }
+  .tip b { color: #ffffff; }
+  .tip .tmin { color: #4ade80; font-weight: 600; }
+  .tip .tmed { color: #ffffff; }
+  .tip .tmax { color: #f87171; font-weight: 600; }
+
+  /* --- Legenda ------------------------------------------------------------ */
+  #legend {
+    position: absolute; left: 14px; bottom: 12px;
+    background: rgba(9, 13, 24, .82);
+    border: 1px solid rgba(255, 255, 255, .12); border-radius: 10px;
+    padding: 8px 12px; color: #cfd8ea; font-size: 12px;
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  #legend .row { display: flex; align-items: center; gap: 8px; }
+  #legend .dot {
+    width: 11px; height: 11px; border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .55);
+    flex: 0 0 auto;
+  }
+</style>
+<script src="https://unpkg.com/globe.gl@2"></script>
+</head>
+<body>
+<div id="globeViz"></div>
+<div id="legend">
+  <div class="row"><span class="dot" style="background:#a4161a"></span> OCI</div>
+  <div class="row"><span class="dot" style="background:#ffa94d"></span> AWS</div>
+  <div class="row"><span class="dot" style="background:#6b7280"></span> N/D per questa configurazione</div>
+  <div class="row"><span class="dot" style="background:transparent;border:2px solid #ffd166"></span> AWS più economica + OCI vicina</div>
+</div>
+
+<script>
+  // ---- Protocollo componente Streamlit (postMessage, senza librerie) ------
+  function sendMessage(type, data) {
+    window.parent.postMessage(Object.assign({ isStreamlitMessage: true, type: type }, data), '*');
+  }
+  function sendValue(v) {
+    sendMessage('streamlit:setComponentValue', { value: v, dataType: 'json' });
+  }
+
+  // ---- Stato -------------------------------------------------------------
+  const HEIGHT = 600;
+  let world = null;
+  let clickCount = 0;      // nonce: distingue i nuovi click da quelli già gestiti
+  let lastSelected = null;
+  let lastFocus = null;    // zona AWS più economica su cui si è già orientato
+
+  // ---- Marker ------------------------------------------------------------
+  function pinSVG(color) {
+    return `<svg class="pin" width="22" height="30" viewBox="0 0 22 30" style="--c:${color}">
+      <path d="M11 0C4.9 0 0 4.9 0 11c0 8.2 11 19 11 19s11-10.8 11-19C22 4.9 17.1 0 11 0z"
+            fill="${color}" stroke="rgba(255,255,255,.9)" stroke-width="1.4"/>
+      <circle cx="11" cy="10.5" r="4" fill="rgba(8,12,22,.85)"/>
+    </svg>`;
+  }
+
+  function makeEl(d) {
+    const el = document.createElement('div');
+    el.style.pointerEvents = 'auto';
+
+    // Priorità di sovrapposizione: AWS > OCI > N/D; il pin selezionato sopra
+    // a tutti, l'hover sopra a tutto (classi CSS con !important: vedi sopra).
+    el.classList.add(d.z === 30 ? 'z-aws' : d.z === 20 ? 'z-oci' : 'z-nd');
+    if (d.selected) el.classList.add('z-sel');
+    el.addEventListener('mouseenter', function () {
+      el.classList.add('z-hover');
+    });
+    el.addEventListener('mouseleave', function () {
+      el.classList.remove('z-hover');
+    });
+
+    const cls = 'mk' + (d.selected ? ' sel' : '') + (d.highlight ? ' hl' : '');
+    const tipLines = [];
+    if (d.t1) tipLines.push('<span class="tmin">' + d.t1 + '</span>');
+    if (d.t2) tipLines.push('<span class="tmed">' + d.t2 + '</span>');
+    if (d.t3) tipLines.push('<span class="tmax">' + d.t3 + '</span>');
+    el.innerHTML = `
+      <div class="${cls}">
+        ${d.selected ? '<div class="ring"></div>' : ''}
+        ${d.highlight ? '<div class="ring gold"></div>' : ''}
+        ${pinSVG(d.color)}
+        <div class="tip"><b>${d.name}</b><br/>${d.sub}<br/>${tipLines.join('<br/>')}</div>
+      </div>`;
+    el.querySelector('.mk').addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      clickCount += 1;
+      sendValue({ id: d.id, n: clickCount });
+    });
+    return el;
+  }
+
+  // ---- Globo -------------------------------------------------------------
+  function initGlobe() {
+    world = new Globe(document.getElementById('globeViz'))
+      .width(window.innerWidth)
+      .height(HEIGHT)
+      .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+      .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+      .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+      .showAtmosphere(true)
+      .atmosphereColor('#4c83ff')
+      .atmosphereAltitude(0.2)
+      .htmlElementsData([])
+      .htmlLat('lat')
+      .htmlLng('lng')
+      .htmlAltitude(0.015)
+      .htmlElement(makeEl);
+
+    // Nasconde i pin quando finiscono sul lato non visibile del globo
+    // (guardia: la proprietà esiste nelle versioni recenti di globe.gl)
+    if (typeof world.htmlElementVisibilityModifier === 'function') {
+      world.htmlElementVisibilityModifier(function (el, isVisible) {
+        el.style.opacity = isVisible ? 1 : 0;
+        el.style.pointerEvents = isVisible ? 'auto' : 'none';
+      });
+    }
+
+    // Click sull'oceano/terra "vuota" -> deseleziona
+    world.onGlobeClick(function () {
+      clickCount += 1;
+      sendValue({ id: null, n: clickCount });
+    });
+
+    world.pointOfView({ lat: 25, lng: 10, altitude: 2.2 }, 0);
+    world.controls().enableDamping = true;
+
+    window.addEventListener('resize', function () {
+      world.width(window.innerWidth);
+    });
+  }
+
+  // ---- Render: chiamato da Streamlit a ogni rerun (filtri, click, ...) ----
+  function render(args) {
+    if (!world) initGlobe();
+
+    world.htmlElementsData(args.pins || []);
+
+    const controls = world.controls();
+    controls.autoRotate = !!args.rotate && !args.selected;
+    controls.autoRotateSpeed = 0.55;
+
+    const pins = args.pins || [];
+
+    if (args.selected && args.selected !== lastSelected) {
+      // Vola sulla città appena selezionata
+      const r = pins.find(function (x) { return x.id === args.selected; });
+      if (r) world.pointOfView({ lat: r.lat, lng: r.lng, altitude: 1.6 }, 900);
+    } else if (!args.selected && args.focus && args.focus !== lastFocus) {
+      // Orienta il globo sulla zona con il prezzo AWS più basso
+      const f = pins.find(function (x) { return x.id === args.focus; });
+      if (f) world.pointOfView({ lat: f.lat, lng: f.lng, altitude: 1.9 }, 1200);
+    }
+    lastSelected = args.selected || null;
+    lastFocus = args.focus || null;
+  }
+
+  window.addEventListener('message', function (ev) {
+    const msg = ev.data;
+    if (msg && msg.type === 'streamlit:render') render(msg.args || {});
+  });
+
+  sendMessage('streamlit:componentReady', { apiVersion: 1 });
+  sendMessage('streamlit:setFrameHeight', { height: HEIGHT });
+</script>
+</body>
+</html>
