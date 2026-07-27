@@ -23,6 +23,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
+from PIL import Image 
 
 PROVIDER_COLOR = {"oci": "#a4161a", "aws": "#ffa94d"}   # rosso scuro / arancione chiaro
 PROVIDER_LABEL = {"oci": "OCI", "aws": "AWS"}
@@ -424,7 +425,7 @@ def build_payload(data, groups, city_ids, arch_values, vcpu, ram,
 
 st.set_page_config(
     page_title="HPC - 🟠AWS ⚔️​ OCI🔴",
-    page_icon="U+2601",
+    page_icon=Image.open(Path(__file__).parent / "favicon.png"),
     layout="wide",
     initial_sidebar_state="expanded",
 )
