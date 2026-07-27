@@ -424,7 +424,7 @@ def build_payload(data, groups, city_ids, arch_values, vcpu, ram,
 
 st.set_page_config(
     page_title="HPC - 🟠AWS ⚔️​ OCI🔴",
-    page_icon="\u2601",
+    page_icon="U+2601",
     layout="wide",
     initial_sidebar_state="expanded",
 )
