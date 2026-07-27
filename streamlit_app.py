@@ -750,7 +750,7 @@ if ss.selected and ss.selected not in {p["id"] for p in pins}:
                                 vcpu, ram, price_col, suffix, None)
 
 # --- Layout ------------------------------------------------------------------
-st.title("Virtual Machines, Around the World")
+st.title(" 🖥️​ Virtual Machines, Around the World 🔭 ")
 st.caption(
     f"   · In totale: {DATA['n_rows']} prezzi, aggiornati al 20 Luglio 2026. "
 )
