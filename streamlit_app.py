@@ -423,7 +423,7 @@ def build_payload(data, groups, city_ids, arch_values, vcpu, ram,
 # ---------------------------- UI (Streamlit) ---------------------------------
 
 st.set_page_config(
-    page_title="HPC - AWS vs OCI",
+    page_title="HPC — AWS vs OCI sul globo",
     page_icon="🌍",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -491,6 +491,17 @@ div[data-baseweb='popover']:has([data-testid='stSelectboxVirtualDropdownEmpty'])
 }
 .st-key-city_recap div[data-testid='stButton'] button:hover
   { color: #f87171 !important; }
+/* Prima riga "Close Window": resta agganciata in cima anche scorrendo. */
+.st-key-city_recap .st-key-close_recap {
+  position: sticky; top: -.3rem; z-index: 2; background: #0f1727;
+}
+.st-key-city_recap .st-key-close_recap button {
+  color: #94a3b8 !important; font-size: .78rem;
+  border-bottom: 1px solid rgba(255, 255, 255, .12) !important;
+  border-radius: 0 !important;
+}
+.st-key-city_recap .st-key-close_recap button:hover
+  { color: #e6edf3 !important; }
 </style>""", unsafe_allow_html=True)
 
 BASE_DIR = Path(__file__).parent
@@ -529,6 +540,7 @@ ss.setdefault("selected", None)     # id del pin selezionato (o None)
 ss.setdefault("last_n", 0)          # nonce dell'ultimo click già gestito
 ss.setdefault("show_options", False)
 ss.setdefault("city_open", False)   # riquadro City List forzato aperto
+ss.setdefault("city_blur", False)   # ... e forzato chiuso (togliendo il focus)
 ss.setdefault("scroll_opts", False)
 ss.setdefault("regions_sel", list(GROUP_ORDER))
 ss.setdefault("prev_groups", set(GROUP_ORDER))
@@ -569,6 +581,10 @@ def _remove_city(cid):
     # Il rerun fa perdere il focus (e quindi chiuderebbe il riquadro): lo
     # teniamo aperto per questo giro, così si possono togliere più città.
     ss.city_open = True
+
+
+def _close_recap():
+    ss.city_blur = True     # al rerun togliamo il focus: il riquadro si chiude
 
 
 def _toggle_options():
@@ -627,6 +643,8 @@ with st.sidebar:
         # scelte vivono qui, in un riquadro con scroll, ognuna con la sua ✕.
         if ss.city_sel:
             with st.container(border=False, key="city_recap"):
+                st.button("✕  Close Window", key="close_recap",
+                          use_container_width=True, on_click=_close_recap)
                 for cid in ss.city_sel:
                     col_name, col_x = st.columns([0.85, 0.15],
                                                  vertical_alignment="center")
@@ -644,6 +662,22 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
     ss.city_open = False
+
+    # Il riquadro vive su :focus-within, quindi per chiuderlo basta togliere
+    # il focus: dopo il click su "Close Window" resterebbe sul bottone.
+    if ss.city_blur:
+        ss.city_blur = False
+        components.html(
+            """<script>
+            try {
+              var d = window.parent.document;
+              var box = d.querySelector('.st-key-city_box');
+              var a = d.activeElement;
+              if (box && a && box.contains(a)) a.blur();
+            } catch (e) {}
+            </script>""",
+            height=0,
+        )
 
     st.checkbox("Deseleziona tutte ☄️​", key="clear_all",
                 on_change=_clear_cities, disabled=not ss.city_sel)
@@ -793,8 +827,6 @@ with col_globe:
 with col_stats, st.container(key="kpi_panel"):
     if stats["avg_oci"] is not None and stats["avg_aws"] is not None:
         d = stats["avg_oci"] - stats["avg_aws"]
-        st.caption("")
-        st.caption("")
         if abs(d) < EPS:
             st.metric("​📈​ Average Price Gap", fmt_usd(0) + suffix,
                       delta="Parità", delta_color="off")
