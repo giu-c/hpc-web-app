@@ -423,7 +423,7 @@ def build_payload(data, groups, city_ids, arch_values, vcpu, ram,
 # ---------------------------- UI (Streamlit) ---------------------------------
 
 st.set_page_config(
-    page_title="HPC — AWS vs OCI sul globo",
+    page_title="HPC - ☁️​ AWS vs OCI 🥊​",
     page_icon="🌍",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -540,7 +540,7 @@ ss.setdefault("selected", None)     # id del pin selezionato (o None)
 ss.setdefault("last_n", 0)          # nonce dell'ultimo click già gestito
 ss.setdefault("show_options", False)
 ss.setdefault("city_open", False)   # riquadro City List forzato aperto
-ss.setdefault("city_blur", False)   # ... e forzato chiuso (togliendo il focus)
+ss.setdefault("city_blur", 0)       # ... e forzato chiuso (togliendo il focus)
 ss.setdefault("scroll_opts", False)
 ss.setdefault("regions_sel", list(GROUP_ORDER))
 ss.setdefault("prev_groups", set(GROUP_ORDER))
@@ -584,7 +584,9 @@ def _remove_city(cid):
 
 
 def _close_recap():
-    ss.city_blur = True     # al rerun togliamo il focus: il riquadro si chiude
+    # Il contatore rende unico l'HTML dello script di blur: senza, al secondo
+    # click Streamlit riuserebbe l'iframe identico e non lo rieseguirebbe.
+    ss.city_blur += 1
 
 
 def _toggle_options():
@@ -666,15 +668,15 @@ with st.sidebar:
     # Il riquadro vive su :focus-within, quindi per chiuderlo basta togliere
     # il focus: dopo il click su "Close Window" resterebbe sul bottone.
     if ss.city_blur:
-        ss.city_blur = False
         components.html(
-            """<script>
-            try {
+            f"""<script>
+            /* {ss.city_blur} */
+            try {{
               var d = window.parent.document;
               var box = d.querySelector('.st-key-city_box');
               var a = d.activeElement;
               if (box && a && box.contains(a)) a.blur();
-            } catch (e) {}
+            }} catch (e) {{}}
             </script>""",
             height=0,
         )
