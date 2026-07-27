@@ -830,6 +830,8 @@ with col_globe:
 with col_stats, st.container(key="kpi_panel"):
     if stats["avg_oci"] is not None and stats["avg_aws"] is not None:
         d = stats["avg_oci"] - stats["avg_aws"]
+        st.caption("")
+        st.caption("")
         if abs(d) < EPS:
             st.metric("​📈​ Average Price Gap", fmt_usd(0) + suffix,
                       delta="Parità", delta_color="off")
