@@ -425,7 +425,7 @@ def build_payload(data, groups, city_ids, arch_values, vcpu, ram,
 
 st.set_page_config(
     page_title="- 🟠AWS ⚔️​ OCI🔴",
-    page_icon=Image.open(Path(__file__).parent / "favicon.jpg"),
+    page_icon=Image.open(Path(__file__).parent / "favicon.png"),
     layout="wide",
     initial_sidebar_state="expanded",
 )
