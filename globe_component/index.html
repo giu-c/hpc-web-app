@@ -34,13 +34,15 @@
   .mk:hover .pin { transform: scale(1.22); }
   .mk.sel .pin   { transform: scale(1.28); }
 
-  /* Coppia migliore (AWS più economica + OCI più vicina): brilla e pulsa */
+  /* Coppia migliore (AWS più economica + OCI più vicina): brilla e pulsa.
+     Il colore dell'alone/anello arriva da --hl, impostato per provider:
+     giallo per l'AWS più economica, rosso per l'OCI più vicina. */
   .mk.hl .pin {
     animation: glow 1.4s ease-in-out infinite;
   }
   @keyframes glow {
     0%, 100% { filter: drop-shadow(0 0 6px var(--c)); }
-    50%      { filter: drop-shadow(0 0 16px #ffd166) brightness(1.4); }
+    50%      { filter: drop-shadow(0 0 16px var(--hl, #ffd166)) brightness(1.4); }
   }
 
   .ring {
@@ -50,7 +52,7 @@
     animation: pulse 1.6s ease-out infinite;
     pointer-events: none;
   }
-  .ring.gold { border-color: #ffd166; }
+  .ring.hl { border-color: var(--hl, #ffd166); }
   @keyframes pulse {
     0%   { transform: scale(.35); opacity: .95; }
     100% { transform: scale(1.7); opacity: 0; }
@@ -74,6 +76,7 @@
   /* --- Legenda ------------------------------------------------------------ */
   #legend {
     position: absolute; left: 14px; bottom: 12px;
+    max-width: 290px;
     background: rgba(9, 13, 24, .82);
     border: 1px solid rgba(255, 255, 255, .12); border-radius: 10px;
     padding: 8px 12px; color: #cfd8ea; font-size: 12px;
@@ -85,6 +88,16 @@
     border: 1px solid rgba(255, 255, 255, .55);
     flex: 0 0 auto;
   }
+  /* Anelli della legenda: stessa "grammatica" dei pin pulsanti sul globo */
+  #legend .dot.ring-dot { background: transparent; border-width: 2px; }
+  #legend .sep {
+    height: 1px; background: rgba(255, 255, 255, .12); margin: 2px 0;
+  }
+  #legend b { color: #ffffff; font-weight: 600; }
+  #legend .note {
+    color: #93a1bd; font-size: 11px; line-height: 1.4;
+    padding-left: 19px;   /* allineata al testo delle righe sopra */
+  }
 </style>
 <script src="https://unpkg.com/globe.gl@2"></script>
 </head>
@@ -94,7 +107,15 @@
   <div class="row"><span class="dot" style="background:#a4161a"></span> OCI</div>
   <div class="row"><span class="dot" style="background:#ffa94d"></span> AWS</div>
   <div class="row"><span class="dot" style="background:#6b7280"></span> N/D per questa configurazione</div>
-  <div class="row"><span class="dot" style="background:transparent;border:2px solid #ffd166"></span> AWS più economica + OCI vicina</div>
+  <div class="sep"></div>
+  <div class="row">
+    <span class="dot ring-dot" style="border-color:#ffd166"></span>
+    <span>Pulsing yellow: <b>AWS - cheapest option</b></span>
+  </div>
+  <div class="row">
+    <span class="dot ring-dot" style="border-color:#ff4d5a"></span>
+    <span>Pulsing red: <b>OCI - Nearest city to ⤴️​</b></span>
+  </div>
 </div>
 
 <script>
@@ -112,6 +133,8 @@
   let clickCount = 0;      // nonce: distingue i nuovi click da quelli già gestiti
   let lastSelected = null;
   let lastFocus = null;    // zona AWS più economica su cui si è già orientato
+  let zoomTimer = null;    // secondo tempo del volo: lo zoom sui pin evidenziati
+  let firstFly = true;     // primo orientamento dopo l'apertura della pagina
 
   // ---- Marker ------------------------------------------------------------
   function pinSVG(color) {
@@ -138,14 +161,16 @@
     });
 
     const cls = 'mk' + (d.selected ? ' sel' : '') + (d.highlight ? ' hl' : '');
+    // Giallo = AWS più economica; rosso = OCI più vicina a quella AWS
+    const hlColor = d.provider === 'oci' ? '#ff4d5a' : '#ffd166';
     const tipLines = [];
     if (d.t1) tipLines.push('<span class="tmin">' + d.t1 + '</span>');
     if (d.t2) tipLines.push('<span class="tmed">' + d.t2 + '</span>');
     if (d.t3) tipLines.push('<span class="tmax">' + d.t3 + '</span>');
     el.innerHTML = `
-      <div class="${cls}">
+      <div class="${cls}" style="--hl:${hlColor}">
         ${d.selected ? '<div class="ring"></div>' : ''}
-        ${d.highlight ? '<div class="ring gold"></div>' : ''}
+        ${d.highlight ? '<div class="ring hl"></div>' : ''}
         ${pinSVG(d.color)}
         <div class="tip"><b>${d.name}</b><br/>${d.sub}<br/>${tipLines.join('<br/>')}</div>
       </div>`;
@@ -155,6 +180,61 @@
       sendValue({ id: d.id, n: clickCount });
     });
     return el;
+  }
+
+  // ---- Inquadratura: centro e distanza dei pin evidenziati ---------------
+  // Media dei versori (invece della media di lat/lng): resta corretta anche a
+  // cavallo dell'antimeridiano.
+  function toVec(p) {
+    const la = p.lat * Math.PI / 180, ln = p.lng * Math.PI / 180;
+    return [Math.cos(la) * Math.cos(ln), Math.cos(la) * Math.sin(ln), Math.sin(la)];
+  }
+  function frameOf(points, fallback) {
+    if (!points.length) return null;
+    let x = 0, y = 0, z = 0;
+    points.forEach(function (p) {
+      const v = toVec(p); x += v[0]; y += v[1]; z += v[2];
+    });
+    const n = Math.hypot(x, y, z);
+    // Punti antipodali: il centro non è definito, si resta sul riferimento
+    let lat, lng;
+    if (n < 1e-6) { lat = fallback.lat; lng = fallback.lng; }
+    else {
+      x /= n; y /= n; z /= n;
+      lat = Math.asin(z) * 180 / Math.PI;
+      lng = Math.atan2(y, x) * 180 / Math.PI;
+    }
+    // Separazione massima dal centro (gradi) -> quanto si può stringere
+    let maxDeg = 0;
+    const cv = toVec({ lat: lat, lng: lng });
+    points.forEach(function (p) {
+      const v = toVec(p);
+      const dot = Math.min(1, Math.max(-1, cv[0] * v[0] + cv[1] * v[1] + cv[2] * v[2]));
+      maxDeg = Math.max(maxDeg, Math.acos(dot) * 180 / Math.PI);
+    });
+    // Quota di inquadratura: la regola lineare saturava sul tetto (= nessuno
+    // zoom) già con un paio di pari merito lontani. Qui si risolve la
+    // geometria: il pin più esterno deve cadere entro ~19° dall'asse della
+    // camera (il semicampo visivo è ~25°), che è la condizione per vederli
+    // tutti con un margine comodo. Sotto la soglia comanda il minimo 1.25.
+    const th = maxDeg * Math.PI / 180;
+    const fit = Math.cos(th) + Math.sin(th) / Math.tan(19 * Math.PI / 180) - 1;
+    const alt = Math.min(1.85, Math.max(1.25, fit));
+    return { lat: lat, lng: lng, altitude: alt };
+  }
+
+  // Volo in due tempi: prima l'orientamento, poi un leggero zoom
+  function flyThenZoom(from, to, dur1, dur2) {
+    clearTimeout(zoomTimer);
+    world.pointOfView({ lat: from.lat, lng: from.lng, altitude: from.altitude }, dur1);
+    if (!to) return;
+    zoomTimer = setTimeout(function () {
+      // Con la rotazione automatica attiva si tocca solo l'altitudine: forzare
+      // di nuovo lat/lng riporterebbe il globo indietro con uno scatto.
+      const spin = world.controls().autoRotate;
+      const pov = spin ? world.pointOfView() : to;
+      world.pointOfView({ lat: pov.lat, lng: pov.lng, altitude: to.altitude }, dur2);
+    }, dur1 + 150);
   }
 
   // ---- Globo -------------------------------------------------------------
@@ -211,12 +291,26 @@
 
     if (args.selected && args.selected !== lastSelected) {
       // Vola sulla città appena selezionata
+      clearTimeout(zoomTimer);
       const r = pins.find(function (x) { return x.id === args.selected; });
       if (r) world.pointOfView({ lat: r.lat, lng: r.lng, altitude: 1.6 }, 900);
     } else if (!args.selected && args.focus && args.focus !== lastFocus) {
-      // Orienta il globo sulla zona con il prezzo AWS più basso
+      // Orienta il globo sulla zona con il prezzo AWS più basso, poi stringe
+      // l'inquadratura sui pin evidenziati (AWS più economica + OCI vicina).
       const f = pins.find(function (x) { return x.id === args.focus; });
-      if (f) world.pointOfView({ lat: f.lat, lng: f.lng, altitude: 1.9 }, 1200);
+      if (f) {
+        const from = { lat: f.lat, lng: f.lng, altitude: 1.9 };
+        if (firstFly) {
+          // All'apertura si resta sulla vista d'insieme: solo orientamento,
+          // niente zoom (il globo deve entrare tutto nell'inquadratura).
+          clearTimeout(zoomTimer);
+          world.pointOfView(from, 1200);
+        } else {
+          const hl = pins.filter(function (x) { return x.highlight; });
+          flyThenZoom(from, frameOf(hl.length ? hl : [f], f), 1200, 900);
+        }
+        firstFly = false;
+      }
     }
     lastSelected = args.selected || null;
     lastFocus = args.focus || null;

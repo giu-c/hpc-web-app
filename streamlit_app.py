@@ -384,11 +384,12 @@ def build_payload(data, groups, city_ids, arch_values, vcpu, ram,
         focus = best_aws_ties[0]["id"]
         for p in best_aws_ties:
             p["highlight"] = True
-        # ... e l'OCI più vicina al pin AWS più economico pulsa con lui
+        # ... e l'OCI più vicina al pin AWS più economico pulsa con lui.
+        # Solo fra le OCI DISPONIBILI: una città N/D per la configurazione
+        # attiva non va evidenziata (non è una vera alternativa).
         f = best_aws_ties[0]
-        near_pool = oci_avail or [p for p in pins if p["provider"] == "oci"]
-        if near_pool:
-            nearest_oci = min(near_pool, key=lambda p: (p["lat"] - f["lat"]) ** 2
+        if oci_avail:
+            nearest_oci = min(oci_avail, key=lambda p: (p["lat"] - f["lat"]) ** 2
                               + (p["lng"] - f["lng"]) ** 2)
             nearest_oci["highlight"] = True
 
@@ -503,6 +504,21 @@ div[data-baseweb='popover']:has([data-testid='stSelectboxVirtualDropdownEmpty'])
 }
 .st-key-city_recap .st-key-close_recap button:hover
   { color: #e6edf3 !important; }
+/* Meno spazio morto in cima: di serie il contenuto principale parte a 6rem
+   dal bordo, così il globo finiva sotto la piega. La barra di Streamlit
+   (Deploy, menu) resta al suo posto, solo trasparente. */
+div[data-testid='stMainBlockContainer'], section[data-testid='stMain'] .block-container {
+  padding-top: 2.6rem !important;
+}
+header[data-testid='stHeader'] { background: transparent; }
+/* Titolo e didascalia più stretti attorno al testo */
+section[data-testid='stMain'] h1 {
+  padding-top: 0 !important; padding-bottom: .35rem !important;
+  margin-top: 0 !important;
+}
+section[data-testid='stMain'] [data-testid='stCaptionContainer'] {
+  margin-bottom: .1rem;
+}
 </style>""", unsafe_allow_html=True)
 
 BASE_DIR = Path(__file__).parent
@@ -772,7 +788,8 @@ with col_globe:
     # poi AWS) rafforza la priorità di sovrapposizione insieme allo z-index.
     pin_args = sorted(
         [{k: p[k] for k in ("id", "name", "sub", "lat", "lng", "color",
-                            "selected", "highlight", "z", "t1", "t2", "t3")}
+                            "selected", "highlight", "provider", "z",
+                            "t1", "t2", "t3")}
          for p in pins],
         key=lambda p: p["z"],
     )
