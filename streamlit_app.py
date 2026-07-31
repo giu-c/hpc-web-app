@@ -338,7 +338,7 @@ def build_payload(data, groups, city_ids, arch_values, vcpu, ram,
                              arch_values, price_col)
         pin = {**c, "region": region, "offers": offers,
                "sub": ("AWS · " + region) if c["provider"] == "aws"
-                      else "OCI · Global single price"}
+                      else "OCI · global single price"}
         if offers:
             mn, avg, mx = price_stats(offers)
             pin.update(available=True, cost=mn,
@@ -911,8 +911,8 @@ with col_stats, st.container(key="kpi_panel"):
             # Righe della stessa sezione in un unico caption (a capo con "  \n"):
             # elementi separati prenderebbero il gap pieno del blocco verticale.
             st.caption(f"   · OCI Avg: {md_usd(stats['avg_oci'])}{suffix} "
-                       f"({stats['n_oci']} opts)\n"
-                       f"\n   · AWS Avg: {md_usd(stats['avg_aws'])}{suffix} "
+                       f"({stats['n_oci']} opts)  \n"
+                       f"   · AWS Avg: {md_usd(stats['avg_aws'])}{suffix} "
                        f"({stats['n_aws']} opts)")
 
     if stats["best_oci"]:
