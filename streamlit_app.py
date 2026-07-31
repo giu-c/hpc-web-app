@@ -31,8 +31,8 @@ NA_COLOR = "#6b7280"                                     # grigio: non disponibi
 Z_PRIORITY = {"aws": 30, "oci": 20, "nd": 10}            # sovrapposizione pin
 EPS = 1e-9
 
-GROUP_ORDER = ["Europa", "Nord America", "Asia", "Medio-Oriente",
-               "Sud America", "Africa", "Oceania"]
+GROUP_ORDER = ["Europe", "North America", "Asia", "Middle East",
+               "South America", "Africa", "Oceania"]
 
 ARCH_OPTIONS = [("ARM", "ARM"), ("x86 AMD", "x86(AMD)"), ("x86 Intel", "x86(Intel)")]
 
@@ -51,30 +51,30 @@ GRANULARITY = {  # etichetta -> (colonna csv, suffisso, formato numerico)
 # ----------------------------------------------------------------------------
 AWS_CITIES = [
     # Nord America
-    {"id": "aws|us-east-1",      "region": "us-east-1",      "name": "US East (N. Virginia)",      "lat": 38.95,  "lng": -77.45,  "group": "Nord America"},
-    {"id": "aws|us-east-2",      "region": "us-east-2",      "name": "US East (Ohio)",             "lat": 39.96,  "lng": -83.00,  "group": "Nord America"},
-    {"id": "aws|us-west-1",      "region": "us-west-1",      "name": "US West (N. California)",    "lat": 37.35,  "lng": -121.96, "group": "Nord America"},
-    {"id": "aws|us-west-2",      "region": "us-west-2",      "name": "US West (Oregon)",           "lat": 45.85,  "lng": -119.70, "group": "Nord America"},
-    {"id": "aws|ca-central-1",   "region": "ca-central-1",   "name": "Canada (Central)",           "lat": 45.50,  "lng": -73.57,  "group": "Nord America"},
-    {"id": "aws|ca-west-1",      "region": "ca-west-1",      "name": "Canada West (Calgary)",      "lat": 51.05,  "lng": -114.07, "group": "Nord America"},
-    {"id": "aws|mx-central-1",   "region": "mx-central-1",   "name": "Mexico (Central)",           "lat": 20.59,  "lng": -100.39, "group": "Nord America"},
+    {"id": "aws|us-east-1",      "region": "us-east-1",      "name": "US East (N. Virginia)",      "lat": 38.95,  "lng": -77.45,  "group": "North America"},
+    {"id": "aws|us-east-2",      "region": "us-east-2",      "name": "US East (Ohio)",             "lat": 39.96,  "lng": -83.00,  "group": "North America"},
+    {"id": "aws|us-west-1",      "region": "us-west-1",      "name": "US West (N. California)",    "lat": 37.35,  "lng": -121.96, "group": "North America"},
+    {"id": "aws|us-west-2",      "region": "us-west-2",      "name": "US West (Oregon)",           "lat": 45.85,  "lng": -119.70, "group": "North America"},
+    {"id": "aws|ca-central-1",   "region": "ca-central-1",   "name": "Canada (Central)",           "lat": 45.50,  "lng": -73.57,  "group": "North America"},
+    {"id": "aws|ca-west-1",      "region": "ca-west-1",      "name": "Canada West (Calgary)",      "lat": 51.05,  "lng": -114.07, "group": "North America"},
+    {"id": "aws|mx-central-1",   "region": "mx-central-1",   "name": "Mexico (Central)",           "lat": 20.59,  "lng": -100.39, "group": "North America"},
     # Sud America
-    {"id": "aws|sa-east-1",      "region": "sa-east-1",      "name": "South America (São Paulo)",  "lat": -23.55, "lng": -46.63,  "group": "Sud America"},
+    {"id": "aws|sa-east-1",      "region": "sa-east-1",      "name": "South America (São Paulo)",  "lat": -23.55, "lng": -46.63,  "group": "South America"},
     # Europa
-    {"id": "aws|eu-central-1",   "region": "eu-central-1",   "name": "Europe (Frankfurt)",         "lat": 50.11,  "lng": 8.68,    "group": "Europa"},
-    {"id": "aws|eu-central-2",   "region": "eu-central-2",   "name": "Europe (Zurich)",            "lat": 47.37,  "lng": 8.54,    "group": "Europa"},
-    {"id": "aws|eu-west-1",      "region": "eu-west-1",      "name": "Europe (Ireland)",           "lat": 53.35,  "lng": -6.26,   "group": "Europa"},
-    {"id": "aws|eu-west-2",      "region": "eu-west-2",      "name": "Europe (London)",            "lat": 51.51,  "lng": -0.13,   "group": "Europa"},
-    {"id": "aws|eu-west-3",      "region": "eu-west-3",      "name": "Europe (Paris)",             "lat": 48.86,  "lng": 2.35,    "group": "Europa"},
-    {"id": "aws|eu-south-1",     "region": "eu-south-1",     "name": "Europe (Milan)",             "lat": 45.46,  "lng": 9.19,    "group": "Europa"},
-    {"id": "aws|eu-south-2",     "region": "eu-south-2",     "name": "Europe (Spain)",             "lat": 41.65,  "lng": -0.88,   "group": "Europa"},
-    {"id": "aws|eu-north-1",     "region": "eu-north-1",     "name": "Europe (Stockholm)",         "lat": 59.33,  "lng": 18.06,   "group": "Europa"},
+    {"id": "aws|eu-central-1",   "region": "eu-central-1",   "name": "Europe (Frankfurt)",         "lat": 50.11,  "lng": 8.68,    "group": "Europe"},
+    {"id": "aws|eu-central-2",   "region": "eu-central-2",   "name": "Europe (Zurich)",            "lat": 47.37,  "lng": 8.54,    "group": "Europe"},
+    {"id": "aws|eu-west-1",      "region": "eu-west-1",      "name": "Europe (Ireland)",           "lat": 53.35,  "lng": -6.26,   "group": "Europe"},
+    {"id": "aws|eu-west-2",      "region": "eu-west-2",      "name": "Europe (London)",            "lat": 51.51,  "lng": -0.13,   "group": "Europe"},
+    {"id": "aws|eu-west-3",      "region": "eu-west-3",      "name": "Europe (Paris)",             "lat": 48.86,  "lng": 2.35,    "group": "Europe"},
+    {"id": "aws|eu-south-1",     "region": "eu-south-1",     "name": "Europe (Milan)",             "lat": 45.46,  "lng": 9.19,    "group": "Europe"},
+    {"id": "aws|eu-south-2",     "region": "eu-south-2",     "name": "Europe (Spain)",             "lat": 41.65,  "lng": -0.88,   "group": "Europe"},
+    {"id": "aws|eu-north-1",     "region": "eu-north-1",     "name": "Europe (Stockholm)",         "lat": 59.33,  "lng": 18.06,   "group": "Europe"},
     # Africa
     {"id": "aws|af-south-1",     "region": "af-south-1",     "name": "Africa (Cape Town)",         "lat": -33.92, "lng": 18.42,   "group": "Africa"},
     # Medio-Oriente
-    {"id": "aws|il-central-1",   "region": "il-central-1",   "name": "Israel (Tel Aviv)",          "lat": 32.08,  "lng": 34.78,   "group": "Medio-Oriente"},
-    {"id": "aws|me-south-1",     "region": "me-south-1",     "name": "Middle East (Bahrain)",      "lat": 26.23,  "lng": 50.59,   "group": "Medio-Oriente"},
-    {"id": "aws|me-central-1",   "region": "me-central-1",   "name": "Middle East (UAE)",          "lat": 25.20,  "lng": 55.27,   "group": "Medio-Oriente"},
+    {"id": "aws|il-central-1",   "region": "il-central-1",   "name": "Israel (Tel Aviv)",          "lat": 32.08,  "lng": 34.78,   "group": "Middle East"},
+    {"id": "aws|me-south-1",     "region": "me-south-1",     "name": "Middle East (Bahrain)",      "lat": 26.23,  "lng": 50.59,   "group": "Middle East"},
+    {"id": "aws|me-central-1",   "region": "me-central-1",   "name": "Middle East (UAE)",          "lat": 25.20,  "lng": 55.27,   "group": "Middle East"},
     # Asia
     {"id": "aws|ap-east-1",      "region": "ap-east-1",      "name": "Asia Pacific (Hong Kong)",   "lat": 22.32,  "lng": 114.17,  "group": "Asia"},
     {"id": "aws|ap-east-2",      "region": "ap-east-2",      "name": "Asia Pacific (Taipei)",      "lat": 25.03,  "lng": 121.56,  "group": "Asia"},
@@ -95,59 +95,59 @@ AWS_CITIES = [
 
 OCI_CITIES = [
     # Nord America
-    {"id": "oci|ashburn",    "name": "Stati Uniti orientali (Ashburn)",         "lat": 39.04,  "lng": -77.49,  "group": "Nord America"},
-    {"id": "oci|chicago",    "name": "Midwest degli Stati Uniti (Chicago)",     "lat": 41.88,  "lng": -87.63,  "group": "Nord America"},
-    {"id": "oci|phoenix",    "name": "Stati Uniti occidentali (Phoenix)",       "lat": 33.45,  "lng": -112.07, "group": "Nord America"},
-    {"id": "oci|sanjose",    "name": "Stati Uniti occidentali (San Jose)",      "lat": 37.34,  "lng": -121.89, "group": "Nord America"},
-    {"id": "oci|montreal",   "name": "Canada sud-orientale (Montreal)",         "lat": 45.50,  "lng": -73.57,  "group": "Nord America"},
-    {"id": "oci|toronto",    "name": "Canada sud-orientale (Toronto)",          "lat": 43.65,  "lng": -79.38,  "group": "Nord America"},
-    {"id": "oci|queretaro",  "name": "Messico centrale (Querétaro)",            "lat": 20.59,  "lng": -100.39, "group": "Nord America"},
-    {"id": "oci|monterrey",  "name": "Messico nord-orientale (Monterrey)",      "lat": 25.67,  "lng": -100.31, "group": "Nord America"},
+    {"id": "oci|ashburn",      "name": "US East (Ashburn)",                   "lat": 39.04,  "lng": -77.49,  "group": "North America"},
+    {"id": "oci|chicago",      "name": "US Midwest (Chicago)",                "lat": 41.88,  "lng": -87.63,  "group": "North America"},
+    {"id": "oci|phoenix",      "name": "US West (Phoenix)",                   "lat": 33.45,  "lng": -112.07, "group": "North America"},
+    {"id": "oci|sanjose",      "name": "US West (San Jose)",                  "lat": 37.34,  "lng": -121.89, "group": "North America"},
+    {"id": "oci|montreal",     "name": "Canada Southeast (Montreal)",         "lat": 45.50,  "lng": -73.57,  "group": "North America"},
+    {"id": "oci|toronto",      "name": "Canada Southeast (Toronto)",          "lat": 43.65,  "lng": -79.38,  "group": "North America"},
+    {"id": "oci|queretaro",    "name": "Mexico Central (Querétaro)",          "lat": 20.59,  "lng": -100.39, "group": "North America"},
+    {"id": "oci|monterrey",    "name": "Mexico Northeast (Monterrey)",        "lat": 25.67,  "lng": -100.31, "group": "North America"},
     # Sud America
-    {"id": "oci|sanpaolo",   "name": "Brasile orientale (San Paolo)",           "lat": -23.55, "lng": -46.63,  "group": "Sud America"},
-    {"id": "oci|vinhedo",    "name": "Brasile sud-orientale (Vinhedo)",         "lat": -23.03, "lng": -46.98,  "group": "Sud America"},
-    {"id": "oci|santiago",   "name": "Cile centrale (Santiago)",                "lat": -33.45, "lng": -70.67,  "group": "Sud America"},
-    {"id": "oci|valparaiso", "name": "Cile occidentale (Valparaiso)",           "lat": -33.05, "lng": -71.62,  "group": "Sud America"},
-    {"id": "oci|bogota",     "name": "Colombia centrale (Bogotà)",              "lat": 4.71,   "lng": -74.07,  "group": "Sud America"},
+    {"id": "oci|sanpaolo",     "name": "Brazil East (São Paulo)",             "lat": -23.55, "lng": -46.63,  "group": "South America"},
+    {"id": "oci|vinhedo",      "name": "Brazil Southeast (Vinhedo)",          "lat": -23.03, "lng": -46.98,  "group": "South America"},
+    {"id": "oci|santiago",     "name": "Chile Central (Santiago)",            "lat": -33.45, "lng": -70.67,  "group": "South America"},
+    {"id": "oci|valparaiso",   "name": "Chile West (Valparaiso)",             "lat": -33.05, "lng": -71.62,  "group": "South America"},
+    {"id": "oci|bogota",       "name": "Colombia Central (Bogotá)",           "lat": 4.71,   "lng": -74.07,  "group": "South America"},
     # Europa
-    {"id": "oci|parigi",     "name": "Francia centrale (Parigi)",               "lat": 48.86,  "lng": 2.35,    "group": "Europa"},
-    {"id": "oci|marsiglia",  "name": "Francia meridionale (Marsiglia)",         "lat": 43.30,  "lng": 5.37,    "group": "Europa"},
-    {"id": "oci|francoforte","name": "Germania centrale (Francoforte)",         "lat": 50.11,  "lng": 8.68,    "group": "Europa"},
-    {"id": "oci|milano",     "name": "Italia nord-occidentale (Milano)",        "lat": 45.46,  "lng": 9.19,    "group": "Europa"},
-    {"id": "oci|torino",     "name": "Italia settentrionale (Torino)",          "lat": 45.07,  "lng": 7.69,    "group": "Europa"},
-    {"id": "oci|amsterdam",  "name": "Paesi Bassi nord-occidentali (Amsterdam)","lat": 52.37,  "lng": 4.90,    "group": "Europa"},
-    {"id": "oci|jovanovac",  "name": "Serbia Centrale (Jovanovac)",             "lat": 44.02,  "lng": 20.99,   "group": "Europa"},
-    {"id": "oci|madrid",     "name": "Spagna centrale (Madrid)",                "lat": 40.42,  "lng": -3.70,   "group": "Europa"},
-    {"id": "oci|madrid2",    "name": "Spagna centrale 2 (Madrid)",              "lat": 40.30,  "lng": -3.55,   "group": "Europa"},
-    {"id": "oci|stoccolma",  "name": "Svezia centrale (Stoccolma)",             "lat": 59.33,  "lng": 18.06,   "group": "Europa"},
-    {"id": "oci|zurigo",     "name": "Svizzera nord (Zurigo)",                  "lat": 47.37,  "lng": 8.54,    "group": "Europa"},
-    {"id": "oci|londra",     "name": "Regno Unito sud (Londra)",                "lat": 51.51,  "lng": -0.13,   "group": "Europa"},
-    {"id": "oci|newport",    "name": "Regno Unito occidentale (Newport)",       "lat": 51.58,  "lng": -3.00,   "group": "Europa"},
+    {"id": "oci|parigi",       "name": "France Central (Paris)",              "lat": 48.86,  "lng": 2.35,    "group": "Europe"},
+    {"id": "oci|marsiglia",    "name": "France South (Marseille)",            "lat": 43.30,  "lng": 5.37,    "group": "Europe"},
+    {"id": "oci|francoforte",  "name": "Germany Central (Frankfurt)",         "lat": 50.11,  "lng": 8.68,    "group": "Europe"},
+    {"id": "oci|milano",       "name": "Italy Northwest (Milan)",             "lat": 45.46,  "lng": 9.19,    "group": "Europe"},
+    {"id": "oci|torino",       "name": "Italy North (Turin)",                 "lat": 45.07,  "lng": 7.69,    "group": "Europe"},
+    {"id": "oci|amsterdam",    "name": "Netherlands Northwest (Amsterdam)",   "lat": 52.37,  "lng": 4.90,    "group": "Europe"},
+    {"id": "oci|jovanovac",    "name": "Serbia Central (Jovanovac)",          "lat": 44.02,  "lng": 20.99,   "group": "Europe"},
+    {"id": "oci|madrid",       "name": "Spain Central (Madrid)",              "lat": 40.42,  "lng": -3.70,   "group": "Europe"},
+    {"id": "oci|madrid2",      "name": "Spain Central 2 (Madrid)",            "lat": 40.30,  "lng": -3.55,   "group": "Europe"},
+    {"id": "oci|stoccolma",    "name": "Sweden Central (Stockholm)",          "lat": 59.33,  "lng": 18.06,   "group": "Europe"},
+    {"id": "oci|zurigo",       "name": "Switzerland North (Zurich)",          "lat": 47.37,  "lng": 8.54,    "group": "Europe"},
+    {"id": "oci|londra",       "name": "UK South (London)",                   "lat": 51.51,  "lng": -0.13,   "group": "Europe"},
+    {"id": "oci|newport",      "name": "UK West (Newport)",                   "lat": 51.58,  "lng": -3.00,   "group": "Europe"},
     # Africa
-    {"id": "oci|kenya",      "name": "Kenya",                                   "lat": -1.29,  "lng": 36.82,   "group": "Africa"},
-    {"id": "oci|casablanca", "name": "Marocco occidentale (Casablanca)",        "lat": 33.57,  "lng": -7.59,   "group": "Africa"},
-    {"id": "oci|marocco2",   "name": "Marocco 2",                               "lat": 33.00,  "lng": -7.62,   "group": "Africa"},
-    {"id": "oci|johannesburg","name": "Sud Africa centrale (Johannesburg)",     "lat": -26.20, "lng": 28.05,   "group": "Africa"},
+    {"id": "oci|kenya",        "name": "Kenya",                               "lat": -1.29,  "lng": 36.82,   "group": "Africa"},
+    {"id": "oci|casablanca",   "name": "Morocco West (Casablanca)",           "lat": 33.57,  "lng": -7.59,   "group": "Africa"},
+    {"id": "oci|marocco2",     "name": "Morocco 2",                           "lat": 33.00,  "lng": -7.62,   "group": "Africa"},
+    {"id": "oci|johannesburg", "name": "South Africa Central (Johannesburg)", "lat": -26.20, "lng": 28.05,   "group": "Africa"},
     # Medio-Oriente
-    {"id": "oci|gerusalemme","name": "Israele centrale (Gerusalemme)",          "lat": 31.77,  "lng": 35.21,   "group": "Medio-Oriente"},
-    {"id": "oci|gedda",      "name": "Arabia Saudita occidentale (Gedda)",      "lat": 21.49,  "lng": 39.19,   "group": "Medio-Oriente"},
-    {"id": "oci|riyad",      "name": "Arabia Saudita centrale (Riyad)",         "lat": 24.71,  "lng": 46.68,   "group": "Medio-Oriente"},
-    {"id": "oci|dubai",      "name": "Emirati Arabi Uniti orientali (Dubai)",   "lat": 25.20,  "lng": 55.27,   "group": "Medio-Oriente"},
-    {"id": "oci|abudhabi",   "name": "Emirati Arabi Uniti centrali (Abu Dhabi)","lat": 24.45,  "lng": 54.38,   "group": "Medio-Oriente"},
+    {"id": "oci|gerusalemme",  "name": "Israel Central (Jerusalem)",          "lat": 31.77,  "lng": 35.21,   "group": "Middle East"},
+    {"id": "oci|gedda",        "name": "Saudi Arabia West (Jeddah)",          "lat": 21.49,  "lng": 39.19,   "group": "Middle East"},
+    {"id": "oci|riyad",        "name": "Saudi Arabia Central (Riyadh)",       "lat": 24.71,  "lng": 46.68,   "group": "Middle East"},
+    {"id": "oci|dubai",        "name": "UAE East (Dubai)",                    "lat": 25.20,  "lng": 55.27,   "group": "Middle East"},
+    {"id": "oci|abudhabi",     "name": "UAE Central (Abu Dhabi)",             "lat": 24.45,  "lng": 54.38,   "group": "Middle East"},
     # Asia
-    {"id": "oci|mumbai",     "name": "India occidentale (Mumbai)",              "lat": 19.08,  "lng": 72.88,   "group": "Asia"},
-    {"id": "oci|hyderabad",  "name": "India del sud (Hyderabad)",               "lat": 17.38,  "lng": 78.49,   "group": "Asia"},
-    {"id": "oci|batam",      "name": "Indonesia settentrionale (Batam)",        "lat": 1.13,   "lng": 104.05,  "group": "Asia"},
-    {"id": "oci|tokyo",      "name": "Giappone orientale (Tokyo)",              "lat": 35.68,  "lng": 139.69,  "group": "Asia"},
-    {"id": "oci|osaka",      "name": "Giappone centrale (Osaka)",               "lat": 34.69,  "lng": 135.50,  "group": "Asia"},
-    {"id": "oci|kulai",      "name": "Malesia occidentale (Kulai)",             "lat": 1.66,   "lng": 103.60,  "group": "Asia"},
-    {"id": "oci|singapore",  "name": "Singapore (Singapore)",                   "lat": 1.35,   "lng": 103.82,  "group": "Asia"},
-    {"id": "oci|singaporew", "name": "Regione occidentale di Singapore",        "lat": 1.33,   "lng": 103.69,  "group": "Asia"},
-    {"id": "oci|seul",       "name": "Corea del Sud centrale (Seul)",           "lat": 37.57,  "lng": 126.98,  "group": "Asia"},
-    {"id": "oci|chuncheon",  "name": "Corea del Sud settentrionale (Chuncheon)","lat": 37.88,  "lng": 127.73,  "group": "Asia"},
+    {"id": "oci|mumbai",       "name": "India West (Mumbai)",                 "lat": 19.08,  "lng": 72.88,   "group": "Asia"},
+    {"id": "oci|hyderabad",    "name": "India South (Hyderabad)",             "lat": 17.38,  "lng": 78.49,   "group": "Asia"},
+    {"id": "oci|batam",        "name": "Indonesia North (Batam)",             "lat": 1.13,   "lng": 104.05,  "group": "Asia"},
+    {"id": "oci|tokyo",        "name": "Japan East (Tokyo)",                  "lat": 35.68,  "lng": 139.69,  "group": "Asia"},
+    {"id": "oci|osaka",        "name": "Japan Central (Osaka)",               "lat": 34.69,  "lng": 135.50,  "group": "Asia"},
+    {"id": "oci|kulai",        "name": "Malaysia West (Kulai)",               "lat": 1.66,   "lng": 103.60,  "group": "Asia"},
+    {"id": "oci|singapore",    "name": "Singapore (Singapore)",               "lat": 1.35,   "lng": 103.82,  "group": "Asia"},
+    {"id": "oci|singaporew",   "name": "Singapore West (Singapore)",          "lat": 1.33,   "lng": 103.69,  "group": "Asia"},
+    {"id": "oci|seul",         "name": "South Korea Central (Seoul)",         "lat": 37.57,  "lng": 126.98,  "group": "Asia"},
+    {"id": "oci|chuncheon",    "name": "South Korea North (Chuncheon)",       "lat": 37.88,  "lng": 127.73,  "group": "Asia"},
     # Oceania
-    {"id": "oci|sydney",     "name": "Australia orientale (Sydney)",            "lat": -33.87, "lng": 151.21,  "group": "Oceania"},
-    {"id": "oci|melbourne",  "name": "Australia sud-orientale (Melbourne)",     "lat": -37.81, "lng": 144.96,  "group": "Oceania"},
+    {"id": "oci|sydney",       "name": "Australia East (Sydney)",             "lat": -33.87, "lng": 151.21,  "group": "Oceania"},
+    {"id": "oci|melbourne",    "name": "Australia Southeast (Melbourne)",     "lat": -37.81, "lng": 144.96,  "group": "Oceania"},
 ]
 
 ALL_CITIES = ([dict(c, provider="aws") for c in AWS_CITIES] +
@@ -167,6 +167,13 @@ def fmt_usd(value):
     dec = 0 if value >= 100 else (2 if value >= 1 else (3 if value >= 0.01 else 4))
     s = f"{value:,.{dec}f}"
     return "$ " + s.replace(",", "§").replace(".", ",").replace("§", ".")
+
+
+def md_usd(value):
+    """fmt_usd per il markdown. Due `$` nello stesso paragrafo vengono letti
+    come delimitatori di formula LaTeX: il testo in mezzo finirebbe in
+    monospace. Con la barra rovesciata il dollaro resta un dollaro."""
+    return fmt_usd(value).replace("$", r"\$")
 
 
 def nearest(options, target):
@@ -203,7 +210,7 @@ INTRO_TEMPLATE = """<style>
 </style>
 <video id="v" autoplay muted playsinline
        src="data:video/mp4;base64,__B64__"></video>
-<div class="skip">clicca per saltare &#9656;</div>
+<div class="skip">click to skip &#9656;</div>
 <script>
   // L'iframe del componente si trasforma da solo in un layer fisso a tutto
   // schermo sopra la pagina (stessa origine: possiamo ridimensionarci).
@@ -331,7 +338,7 @@ def build_payload(data, groups, city_ids, arch_values, vcpu, ram,
                              arch_values, price_col)
         pin = {**c, "region": region, "offers": offers,
                "sub": ("AWS · " + region) if c["provider"] == "aws"
-                      else "OCI · prezzo globale"}
+                      else "OCI · Global single price"}
         if offers:
             mn, avg, mx = price_stats(offers)
             pin.update(available=True, cost=mn,
@@ -339,12 +346,12 @@ def build_payload(data, groups, city_ids, arch_values, vcpu, ram,
                        z=Z_PRIORITY[c["provider"]],
                        price_label=fmt_usd(mn) + suffix, best=offers[0],
                        t1=f"min {fmt_usd(mn)}{suffix}",
-                       t2=f"media {fmt_usd(avg)}{suffix}",
+                       t2=f"avg {fmt_usd(avg)}{suffix}",
                        t3=f"max {fmt_usd(mx)}{suffix}")
         else:
             pin.update(available=False, cost=None, color=NA_COLOR,
-                       z=Z_PRIORITY["nd"], price_label="N/D", best=None,
-                       t1="", t2="N/D per questa configurazione", t3="")
+                       z=Z_PRIORITY["nd"], price_label="N/A", best=None,
+                       t1="", t2="N/A for this setup", t3="")
         pin["selected"] = pin["id"] == selected_id
         pin["prov_label"] = PROVIDER_LABEL[c["provider"]]
         pin["highlight"] = False
@@ -444,12 +451,14 @@ section[data-testid='stSidebar'] div[data-testid='stMultiSelect'] div[data-basew
 section[data-testid='stSidebar'] [data-testid='stAudio']
   { display: none; }
 .st-key-btn_options button {
-  background-color: #22c55e !important; border-color: #22c55e !important;
-  color: #06130b !important; font-weight: 700;
+  background-color: #0f9163 !important; border-color: #12a06e !important;
+  color: #eafff5 !important; font-weight: 600;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14);
+  transition: background-color .18s ease, border-color .18s ease;
 }
 .st-key-btn_options button:hover, .st-key-btn_options button:focus {
-  background-color: #16a34a !important; border-color: #16a34a !important;
-  color: #06130b !important;
+  background-color: #14a373 !important; border-color: #1cb782 !important;
+  color: #ffffff !important;
 }
 .st-key-kpi_panel [data-testid='stMetricLabel'] p
   { font-size: 1.06rem; font-weight: 600; }
@@ -457,6 +466,50 @@ section[data-testid='stSidebar'] [data-testid='stAudio']
   { font-size: 2.15rem; }
 .st-key-kpi_panel [data-testid='stMetricDelta']
   { font-size: 1rem; }
+/* Righe raggruppate nello stesso caption: interlinea un po' più stretta */
+.st-key-kpi_panel [data-testid='stCaptionContainer'] p {
+  line-height: 1.5; font-size: .8rem;
+  /* La colonna è stretta: senza questo le medie andrebbero a capo. Se un
+     valore diventasse lunghissimo viene troncato, non mandato su due righe. */
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Schede KPI. Il rilievo viene da tre strati: superficie appena più chiara
+   del fondo, riflesso interno sul bordo alto (inset) e ombra portata sotto.
+   Niente backdrop-filter: dietro c'è solo il fondo piatto, non avrebbe nulla
+   da sfocare. */
+.st-key-kpi_gap, .st-key-kpi_oci, .st-key-kpi_aws {
+  background: linear-gradient(158deg,
+              rgba(255, 255, 255, .055), rgba(255, 255, 255, .012) 62%);
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: 14px;
+  padding: 1rem 1.15rem 1.05rem;
+  flex: 1 1 auto;        /* si spartiscono l'avanzo fino a chiudere in fondo */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .13),
+              0 10px 22px rgba(0, 0, 0, .45);
+  transition: transform .18s ease, box-shadow .18s ease,
+              border-color .18s ease;
+}
+/* La colonna KPI alta quanto il globo (HEIGHT del componente): così la prima
+   scheda parte in linea col bordo alto del riquadro e l'ultima chiude in
+   fondo. `min-height` e non `height`: con molte città a pari merito il
+   contenuto può crescere, e deve poterlo fare senza essere tagliato. */
+[data-testid='stVerticalBlock']:has(> .st-key-kpi_gap, > .st-key-kpi_oci,
+                                    > .st-key-kpi_aws) {
+  min-height: 600px;
+  gap: .6rem;
+}
+.st-key-kpi_gap:hover, .st-key-kpi_oci:hover, .st-key-kpi_aws:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, .18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16),
+              0 16px 30px rgba(0, 0, 0, .55);
+}
+/* Dentro la scheda il caption sta attaccato al numero: il distacco ora lo
+   dà il bordo, non lo spazio vuoto. */
+.st-key-kpi_gap [data-testid='stVerticalBlock'],
+.st-key-kpi_oci [data-testid='stVerticalBlock'],
+.st-key-kpi_aws [data-testid='stVerticalBlock']
+  { gap: .35rem; }
 /* Riepilogo scorrevole delle città selezionate. Il menu di BaseWeb elenca
    solo le opzioni NON ancora scelte, quindi va nascosto quando è vuoto
    ("No results") e sostituito da questo riquadro, che appare solo mentre la
@@ -656,7 +709,7 @@ with st.sidebar:
     with st.container(key="city_box"):
         st.multiselect("City List", options=city_options, key="city_sel",
                        format_func=city_label, label_visibility="collapsed",
-                       placeholder="Cerca o seleziona una città…")
+                       placeholder="Search or select a city…")
 
         # La tendina elenca solo le città ancora da aggiungere; quelle già
         # scelte vivono qui, in un riquadro con scroll, ognuna con la sua ✕.
@@ -698,7 +751,7 @@ with st.sidebar:
             height=0,
         )
 
-    st.checkbox("Deseleziona tutte ☄️​", key="clear_all",
+    st.checkbox("Clear all ☄️​", key="clear_all",
                 on_change=_clear_cities, disabled=not ss.city_sel)
 
     st.markdown("#### Architecture")
@@ -711,9 +764,9 @@ with st.sidebar:
     arch_values = [csv_val for (_, csv_val), on in zip(ARCH_OPTIONS, arch_checked) if on]
 
     st.markdown("#### Shape")
-    st.select_slider("Numero di vCPU", options=DATA["vcpus"],
+    st.select_slider("Number of vCPU", options=DATA["vcpus"],
                      key="vcpu_sel", on_change=_sync_from_vcpu)
-    st.select_slider("GB di RAM", options=DATA["rams"],
+    st.select_slider("GB of RAM", options=DATA["rams"],
                      key="ram_sel", on_change=_sync_from_ram)
     if (ss.vcpu_sel, ss.ram_sel) not in COMBOS:   # rete di sicurezza
         ss.ram_sel = nearest(DATA["rams_for"][ss.vcpu_sel], ss.ram_sel)
@@ -724,8 +777,8 @@ with st.sidebar:
                         label_visibility="collapsed")
 
     st.divider()
-    rotate = st.toggle("Rotazione automatica", value=True)
-    music = st.toggle("Musica", value=False)
+    rotate = st.toggle("Globe rotation", value=True)
+    music = st.toggle("Music", value=False)
     if music:
         tracks = sorted(AUDIO_DIR.glob("*.mp3"))
         if tracks:
@@ -735,15 +788,15 @@ with st.sidebar:
             st.audio(load_playlist(signature), format="audio/mpeg",
                      loop=True, autoplay=True)
         else:
-            st.caption("Nessun .mp3 trovato: caricane uno nella cartella "
-                       "`audio/` del progetto.")
+            st.caption("No .mp3 found: drop one into the project's "
+                       "`audio/` folder.")
 
 price_col, suffix, num_fmt = GRANULARITY[gran]
 vcpu, ram = ss.vcpu_sel, ss.ram_sel
 
 # "N città selezionate su M" DENTRO la barra della City List (sparisce
 # mentre si digita nella ricerca; con 0 selezioni resta il placeholder).
-count_txt = (f"{len(ss.city_sel)} / {len(city_options)} città"
+count_txt = (f"{len(ss.city_sel)} / {len(city_options)} cities"
              if ss.city_sel else "")
 st.markdown(
     "<style>section[data-testid='stSidebar'] div[data-testid='stMultiSelect'] "
@@ -768,18 +821,18 @@ if ss.selected and ss.selected not in {p["id"] for p in pins}:
 # --- Layout ------------------------------------------------------------------
 st.title("Virtual Machines, Around the World 🔭")
 st.caption(
-    f"   · In totale: {DATA['n_rows']} prezzi, aggiornati al 20 Luglio 2026. "
+    f"   · Total: {DATA['n_rows']} prices, updated July 20, 2026."
 )
 
 col_globe, col_stats = st.columns([2.5, 1], gap="large")
 
 with col_globe:
     if not groups:
-        st.warning("Seleziona almeno una zona geografica nella sezione **Regions**.")
+        st.warning("Select at least one geographic area in the **Regions** section.")
     elif not ss.city_sel:
-        st.warning("Seleziona almeno una città nella sezione **City List**.")
+        st.warning("Select at least one city in the **City List** section.")
     if not arch_values:
-        st.warning("Seleziona almeno un'architettura nella sezione **Architecture**.")
+        st.warning("Select at least one architecture in the **Architecture** section.")
 
     globe_dir = BASE_DIR / "globe_component"
     hpc_globe = components.declare_component("hpc_pricing_globe", path=str(globe_dir))
@@ -801,7 +854,7 @@ with col_globe:
 
     # --- Bottone verde, al centro sotto il globo -----------------------------
     b1, b2, b3 = st.columns([1, 1.2, 1])
-    b2.button("Opzioni Disponibili", key="btn_options", type="primary",
+    b2.button("Available Options", key="btn_options", type="primary",
               use_container_width=True, on_click=_toggle_options)
 
     # --- Analitiche della città selezionata ----------------------------------
@@ -814,70 +867,72 @@ with col_globe:
                     unsafe_allow_html=True)
 
         if not sel["available"]:
-            st.info("Nessuna offerta per questa combinazione di architettura e "
-                    "shape in questa città: prova ad allargare i filtri.")
+            st.info("No offer for this architecture and shape combination "
+                    "in this city: try widening the filters.")
         else:
             b, diff = sel["best"], sel["cost"] - stats["min"]
             pct = (f"{diff / stats['min'] * 100:+.0f}%"
                    if stats["min"] > 0 and diff > 0 else None)
 
             c1, c2, c3 = st.columns(3)
-            c1.metric(f"Miglior prezzo ({gran})", sel["price_label"])
+            c1.metric(f"Best price ({gran})", sel["price_label"])
             c1.caption(f"{b['family']} · {b['processor']} · {b['arch']}")
             if diff > 0:
-                c2.metric("Delta vs più economica", fmt_usd(diff) + suffix,
+                c2.metric("Delta vs cheapest", fmt_usd(diff) + suffix,
                           delta=pct, delta_color="inverse")
             else:
-                c2.metric("Delta vs più economica", "È la più economica ✓")
-            c3.metric("Posizione in classifica",
-                      f"{sel['rank']}ª su {stats['n_avail']}")
+                c2.metric("Delta vs cheapest", "Cheapest one ✓")
+            c3.metric("Ranking position",
+                      f"#{sel['rank']} of {stats['n_avail']}")
             if sel["provider"] == "oci":
-                st.caption("Prezzo OCI valido per tutte le città (region `global`).")
+                st.caption("OCI price applies to every city (region `global`).")
 
-            st.markdown(f"**Offerte disponibili** — {vcpu} vCPU · {ram} GB")
+            st.markdown(f"**Available offers** — {vcpu} vCPU · {ram} GB")
             df_off = pd.DataFrame([{
-                "Famiglia": o["family"], "Processore": o["processor"],
-                "Architettura": o["arch"],
-                "Prezzo": fmt_usd(o["price"]) + suffix,
+                "Family": o["family"], "Processor": o["processor"],
+                "Architecture": o["arch"],
+                "Price": fmt_usd(o["price"]) + suffix,
             } for o in sel["offers"]])
             st.dataframe(df_off, hide_index=True, use_container_width=True)
 
-        st.button("Deseleziona", on_click=lambda: ss.update(selected=None))
+        st.button("Clear all", on_click=lambda: ss.update(selected=None))
 
 with col_stats, st.container(key="kpi_panel"):
     if stats["avg_oci"] is not None and stats["avg_aws"] is not None:
         d = stats["avg_oci"] - stats["avg_aws"]
-        st.caption("")
-        st.caption("")
-        if abs(d) < EPS:
-            st.metric("​📈​ Average Price Gap", fmt_usd(0) + suffix,
-                      delta="Parità", delta_color="off")
-        else:
-            winner = "OCI" if d < 0 else "AWS"
-            st.metric("​📈​ Average Price Gap", fmt_usd(abs(d)) + suffix,
-                      delta=f"a favore di {winner}", delta_color="green")
-        st.caption(f"   · Media OCI {fmt_usd(stats['avg_oci'])}{suffix} "
-                   f"su {stats['n_oci']} opzioni")
-        st.caption(f"   · Media AWS {fmt_usd(stats['avg_aws'])}{suffix} "
-                   f"su {stats['n_aws']} opzioni")
-        st.caption("")
+        with st.container(key="kpi_gap"):
+            if abs(d) < EPS:
+                st.metric("​📈​ Average Price Gap", fmt_usd(0) + suffix,
+                          delta="Even", delta_color="off")
+            else:
+                winner = "OCI" if d < 0 else "AWS"
+                st.metric("​📈​ Average Price Gap", fmt_usd(abs(d)) + suffix,
+                          delta=f"in favor of {winner}", delta_color="green")
+            # Righe della stessa sezione in un unico caption (a capo con "  \n"):
+            # elementi separati prenderebbero il gap pieno del blocco verticale.
+            st.caption(f"   · OCI Avg: {md_usd(stats['avg_oci'])}{suffix} "
+                       f"({stats['n_oci']} opts)\n"
+                       f"\n   · AWS Avg: {md_usd(stats['avg_aws'])}{suffix} "
+                       f"({stats['n_aws']} opts)")
 
     if stats["best_oci"]:
-        st.metric("​​🔴​ Cheapest OCI option", stats["best_oci"]["price_label"])
-        st.caption("   · Prezzo unico globale")
-        st.caption("")
+        with st.container(key="kpi_oci"):
+            st.metric("​​🔴​ Cheapest OCI option",
+                      stats["best_oci"]["price_label"])
+            st.caption("   · Global single price")
 
     if stats["best_aws"]:
-        st.metric("​🟠​ Cheapest AWS option", stats["best_aws"]["price_label"])
-        for p in stats["best_aws_ties"]:
-            st.caption(f"   · {p['name']}")
-        st.caption("")
+        with st.container(key="kpi_aws"):
+            st.metric("​🟠​ Cheapest AWS option",
+                      stats["best_aws"]["price_label"])
+            st.caption("  \n".join(f"   · {p['name']}"
+                                   for p in stats["best_aws_ties"]))
 
 # --- Opzioni Disponibili (rivelate dal bottone verde) ------------------------
 if ss.show_options:
     st.divider()
     st.markdown("<div id='opzioni-anchor'></div>", unsafe_allow_html=True)
-    st.subheader("Opzioni Disponibili")
+    st.subheader("Available Options")
     rows = options_rows(
         DATA["index"],
         aws_regions=[p["region"] for p in pins if p["provider"] == "aws"],
@@ -899,12 +954,11 @@ if ss.show_options:
         )
         
         st.caption(
-            "   · OCI: offerte uguali e disponibili in tutte le città")
-        st.caption(
-            "   · AWS: per ogni family, l'offerta più economica disponibile tra le città selezionate")
+            "   · OCI: same offers available across all cities\n"
+            "\n   · AWS: cheapest offer per family among selected cities")
                 
     else:
-        st.caption("Nessuna opzione disponibile con i filtri attuali.")
+        st.caption("No options available with the current filters.")
 
     # All'apertura, scorri dolcemente fino alla tabella (una volta sola)
     if ss.scroll_opts:
