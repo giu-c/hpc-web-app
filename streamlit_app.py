@@ -1005,7 +1005,7 @@ with col_globe:
     # index.html. Cambiandolo si cambia l'URL, quindi una copia vecchia
     # rimasta in cache non può più essere riutilizzata: è il modo più
     # sicuro per essere certi di eseguire davvero il file aggiornato.
-    hpc_globe = components.declare_component("hpc_globe_v9", path=str(GLOBE_DIR))
+    hpc_globe = components.declare_component("hpc_globe_v10", path=str(GLOBE_DIR))
 
     # Payload del globo. Contiene anche il contenuto della scheda che si apre
     # al click (`head` e `rows`), così il popup è tutto lato browser: cliccare

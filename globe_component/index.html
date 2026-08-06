@@ -420,8 +420,18 @@
   }
 
   // Apre (o ridisegna) la scheda mantenendo l'istanza scelta, se esiste ancora
+  const ROW_FIELDS = 9;   // family, processor, arch, prezzo, N, best, dove,
+                          // posizione, sovrapprezzo
+  let schemaWarned = false;
+
   function openCard(d, idx) {
     cardRows = rowsOf(d);
+    if (cardRows.length && cardRows[0].length < ROW_FIELDS && !schemaWarned) {
+      schemaWarned = true;
+      console.warn('[globe] il payload ha', cardRows[0].length, 'campi per riga',
+        'invece di', ROW_FIELDS + ':', 'streamlit_app.py in esecuzione e\' piu\'',
+        'vecchio di index.html. Le statistiche in fondo alla riga restano vuote.');
+    }
     cardEl.innerHTML = cardHTML(d);
     cardEl.classList.add('open');
     if (!cardRows.length) { cardPick = 0; return; }
@@ -704,7 +714,7 @@
   // Marcatore di versione: se in console non compare questa riga, il browser
   // sta ancora servendo la copia in cache del vecchio index.html
   // (ricarica forzata: Ctrl/Cmd + Shift + R).
-  console.log('[globe] component v9 — click su un pin per aprire la scheda');
+  console.log('[globe] component v10 — click su un pin per aprire la scheda');
 
   sendMessage('streamlit:componentReady', { apiVersion: 1 });
   sendMessage('streamlit:setFrameHeight', { height: HEIGHT });
