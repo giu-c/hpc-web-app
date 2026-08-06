@@ -133,7 +133,10 @@
   }
   #card .kpi b.good { color: #4ade80; }
   #card .kpi.pick {
-    flex: 1.3 1 0;
+    /* Il menu deve contenere solo il nome della famiglia (m6g, A1.Flex):
+       lo spazio in piu' serve agli altri due riquadri, dove prezzo, citta'
+       e sovrapprezzo venivano troncati. */
+    flex: .85 1 0;
     display: flex; flex-direction: column; justify-content: center;
   }
   /* Sotto-riga della statistica (dove si trova l'offerta piu' economica) */
@@ -411,15 +414,42 @@
       const best = r[5];
       vs.textContent = best || 'Cheapest ✓';
       vs.className = best ? '' : 'good';
-      if (where) where.textContent = best ? r[6] : '';
+      if (where) { where.textContent = best ? r[6] : ''; where.title = where.textContent; }
     }
     if (rank) rank.textContent = r[7];
-    // r[8] vuoto = niente sovrapprezzo, e' lei la piu' economica
+    // Vuoto = niente sovrapprezzo, e' lei la piu' economica
     const over = document.getElementById('k-over');
-    if (over) over.textContent = r[8] || '';
+    if (over) { over.textContent = overOf(r); over.title = over.textContent; }
+    else console.warn('[globe] manca #k-over: index.html in uso e\' vecchio');
   }
 
   // Apre (o ridisegna) la scheda mantenendo l'istanza scelta, se esiste ancora
+  // Il sovrapprezzo arriva gia' pronto da Python (campo 8), ma si sa
+  // ricostruire anche dai due prezzi che la riga porta comunque con se':
+  // cosi' la riga rossa compare pure quando streamlit_app.py in esecuzione e'
+  // piu' vecchio del componente, che e' esattamente il caso di un deploy in
+  // cui i due file non sono stati aggiornati insieme.
+  function toNum(s) {
+    // "$ 1.234,56/week" -> 1234.56 (formato italiano: punto = migliaia)
+    const t = String(s || '').replace(/[^\d.,]/g, '');
+    return parseFloat(t.replace(/\./g, '').replace(',', '.')) || 0;
+  }
+  function fmtUsd(v) {
+    if (!v) return '$ 0';
+    const dec = v >= 100 ? 0 : v >= 1 ? 2 : v >= 0.01 ? 3 : 4;
+    return '$ ' + v.toLocaleString('it-IT',
+      { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+  function overOf(r) {
+    if (r[8]) return r[8];                 // valore calcolato da Python
+    if (!r[5]) return '';                  // e' gia' la piu' economica
+    const price = toNum(r[3]), best = toNum(r[5]);
+    if (!(price > best)) return '';
+    const diff = price - best;
+    const pct = best > 0 ? ' (+' + Math.round(diff / best * 100) + '%)' : '';
+    return '\u{1F4C9}+' + fmtUsd(diff) + pct;
+  }
+
   const ROW_FIELDS = 9;   // family, processor, arch, prezzo, N, best, dove,
                           // posizione, sovrapprezzo
   let schemaWarned = false;
@@ -430,7 +460,7 @@
       schemaWarned = true;
       console.warn('[globe] il payload ha', cardRows[0].length, 'campi per riga',
         'invece di', ROW_FIELDS + ':', 'streamlit_app.py in esecuzione e\' piu\'',
-        'vecchio di index.html. Le statistiche in fondo alla riga restano vuote.');
+        'vecchio di index.html. Il sovrapprezzo viene ricalcolato qui.');
     }
     cardEl.innerHTML = cardHTML(d);
     cardEl.classList.add('open');
@@ -450,7 +480,7 @@
       console.warn('[globe] click su', id, '- nessun dato per questo pin');
       return;
     }
-    console.log('[globe] scheda aperta:', id);
+    console.log('[globe] scheda aperta:', id, byId[id].rows && byId[id].rows[0]);
     const prev = selected;
     selected = id;
     if (prev && els[prev]) els[prev].firstElementChild.classList.remove('sel');
@@ -714,7 +744,7 @@
   // Marcatore di versione: se in console non compare questa riga, il browser
   // sta ancora servendo la copia in cache del vecchio index.html
   // (ricarica forzata: Ctrl/Cmd + Shift + R).
-  console.log('[globe] component v10 — click su un pin per aprire la scheda');
+  console.log('[globe] component v12 — click su un pin per aprire la scheda');
 
   sendMessage('streamlit:componentReady', { apiVersion: 1 });
   sendMessage('streamlit:setFrameHeight', { height: HEIGHT });

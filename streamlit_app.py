@@ -1005,7 +1005,7 @@ with col_globe:
     # index.html. Cambiandolo si cambia l'URL, quindi una copia vecchia
     # rimasta in cache non può più essere riutilizzata: è il modo più
     # sicuro per essere certi di eseguire davvero il file aggiornato.
-    hpc_globe = components.declare_component("hpc_globe_v10", path=str(GLOBE_DIR))
+    hpc_globe = components.declare_component("hpc_globe_v12", path=str(GLOBE_DIR))
 
     # Payload del globo. Contiene anche il contenuto della scheda che si apre
     # al click (`head` e `rows`), così il popup è tutto lato browser: cliccare
@@ -1075,8 +1075,6 @@ if ss.show_options:
         f"   · Setup: {vcpu} vCPU · {ram} GB RAM · ( {arch_note} )"
         f"   · Prices include the boot volume ({vol_note});"
     )
-
-# fuckoff!
 
     df, n_max = options_table(stats["aws_regions"], stats["has_oci"], arch_values,
                               vcpu, ram, i_price, vol_size, vol_vpu)
