@@ -1,3 +1,46 @@
+"""
+HPC su globo — AWS vs OCI con dati reali
+----------------------------------------
+Streamlit + componente bidirezionale (globe_component/index.html, Globe.gl).
+
+Dati: data/hpc.csv (prezzi reali, inclusi quelli a 0: contano come tutti gli
+altri) e data/combinations.csv (shape ammesse).
+- provider: 'aws' | 'oci' — pin arancione chiaro (AWS) / rosso scuro (OCI)
+- region:   codici AWS (us-east-1, ...) | 'global' per OCI (stesso prezzo
+            in tutte le città OCI)
+- architecture: ARM | x86(AMD) | x86(Intel)
+- prezzi: price($/h), daily_price, weekly_price, monthly_price
+- prezzi normalizzati sulle prestazioni: le stesse colonne con prefisso 'N-'
+
+Volume di avvio: data/ebs_gp3_prices.csv (AWS, prezzo per regione) e
+data/oci_volume_prices.csv (OCI, regione 'global': stesso prezzo ovunque).
+Chiave (region, size(GB), VPU); il costo del volume scelto nella sidebar si
+somma a OGNI prezzo mostrato, sia reale sia normalizzato.
+
+Musica di sottofondo: metti un .mp3 nella cartella audio/ e attiva il
+pulsante "Musica" nella sidebar (se ci sono più file, si usa il primo in
+ordine alfabetico).
+
+Note di implementazione (v2)
+----------------------------
+1. I quattro tagli temporali sono sempre nello stesso ordine: ogni offerta
+   tiene i prezzi in una tupla di 8 float (4 reali + 4 normalizzati) e la
+   granularità scelta è un semplice indice 0..3 (il normalizzato è a +4).
+   Niente dizionari per riga: meno RAM e meno lookup.
+2. I dati su disco si leggono una volta sola con @st.cache_resource, che
+   NON duplica l'oggetto a ogni rerun (cache_data invece restituisce una
+   copia: su un indice di migliaia di righe è il costo principale).
+3. Il payload del globo è memoizzato sui filtri attivi: muovere un toggle
+   che non tocca i prezzi non ricalcola nulla.
+4. La finestra della City List è un normale st.expander: niente HTML
+   iniettato, niente iframe di servizio, niente selettori :has() o
+   :focus-within da mantenere.
+5. Il click su un pin è gestito interamente dal browser: il payload del
+   globo porta con sé anche il contenuto della scheda ("rows"),
+   quindi la finestra si apre all'istante, senza rerun dello script e
+   senza alcun lavoro lato server.
+"""
+
 import base64
 import csv
 from bisect import bisect_left
@@ -481,17 +524,28 @@ def build_payload(data, groups, city_ids, arch_values, vcpu, ram,
             if stat is None:                      # non può accadere: guardia
                 rows.append([o.family, o.processor, o.arch,
                              fmt_usd(o.price) + suffix,
-                             fmt_usd(o.n_price) + suffix, "", "", ""])
+                             fmt_usd(o.n_price) + suffix, "", "", "", ""])
                 continue
             prices, best, where, n = stat
             rank = bisect_left(prices, o.price) + 1
+            # Sovrapprezzo rispetto a dove la STESSA istanza costa meno:
+            # prima quanto si paga in più, poi di quanto in percentuale.
+            # Senza suffisso: la casella è stretta e il taglio temporale si
+            # legge già nel prezzo dell'istanza. La percentuale si omette se
+            # il riferimento è gratis, altrimenti sarebbe una divisione per
+            # zero (e "+∞%" non direbbe niente di utile).
+            over = ""
+            if rank > 1:
+                diff = o.price - best
+                pct = f"+{diff / best * 100:.0f}%" if best > EPS else ""
+                over = f"📉+{fmt_usd(diff)} ({pct})"
             rows.append([
                 o.family, o.processor, o.arch,
                 fmt_usd(o.price) + suffix, fmt_usd(o.n_price) + suffix,
                 # Vuoto = questa città è la più economica per questa istanza
                 "" if rank == 1 else fmt_usd(best) + suffix,
                 "" if rank == 1 else where,
-                f"#{rank} of {n}",
+                f"#{rank} of {n}", over,
             ])
         p["rows"] = rows
 
@@ -994,7 +1048,7 @@ with col_globe:
     # index.html. Cambiandolo si cambia l'URL, quindi una copia vecchia
     # rimasta in cache non può più essere riutilizzata: è il modo più
     # sicuro per essere certi di eseguire davvero il file aggiornato.
-    hpc_globe = components.declare_component("hpc_globe_v5", path=str(GLOBE_DIR))
+    hpc_globe = components.declare_component("hpc_globe_v9", path=str(GLOBE_DIR))
 
     # Payload del globo. Contiene anche il contenuto della scheda che si apre
     # al click (`head` e `rows`), così il popup è tutto lato browser: cliccare

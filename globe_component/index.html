@@ -132,8 +132,14 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   #card .kpi b.good { color: #4ade80; }
-  #card .kpi.pick { flex: 1.3 1 0; }
+  #card .kpi.pick {
+    flex: 1.3 1 0;
+    display: flex; flex-direction: column; justify-content: center;
+  }
   /* Sotto-riga della statistica (dove si trova l'offerta piu' economica) */
+  /* Sovrapprezzo rispetto alla stessa istanza dove costa meno: in rosso,
+     come i valori massimi nei tooltip dei pin. */
+  #card #k-over { color: #f87171; }
   #card .kpi em {
     display: block; font-style: normal; color: var(--muted);
     font-size: 10px; margin-top: 2px;
@@ -359,15 +365,17 @@
     }
     html +=
       '<div class="kpis">' +
-        '<div class="kpi pick"><span>Instance</span>' +
+        '<div class="kpi pick"><span>🖥️ Instance</span>' +
           '<select id="pick" title="Choose an instance">' + opts + '</select>' +
-          '<b id="k-price"></b></div>' +
-        '<div class="kpi"><span>Cheapest anywhere</span>' +
+        '</div>' +
+        '<div class="kpi"><span>Cheapest 🌍</span>' +
           '<b id="k-vs"></b><em id="k-where"></em></div>' +
-        '<div class="kpi"><span>Ranking</span><b id="k-rank"></b></div>' +
+        '<div class="kpi"><span>Ranking 🏅</span><b id="k-rank"></b>' +
+          '<em id="k-over"></em></div>' +
       '</div><div class="list">';
 
-    // rows: [family, processor, arch, price, N-price, best, dove, posizione]
+    // rows: [family, processor, arch, price, N-price, best, dove, posizione,
+    //        sovrapprezzo]
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
       html +=
@@ -378,10 +386,10 @@
             '<span>N ' + esc(r[4]) + '</span></div>' +
         '</div>';
     }
-return html + '</div><div class="foot">' +
-       ' · ' + rows.length + ' configuration' + (rows.length === 1 ? '' : 's') +
-       ' · boot volume included' +
-       '<br/> · N = price normalized on performance</div>';
+    return html + '</div><div class="foot">' +
+           ' · ' + rows.length + ' configuration' + (rows.length === 1 ? '' : 's') +
+           ' (boot volume included)' +
+           '<br/> · N = price normalized on performance</div>';
   }
 
   // Aggiorna le tre statistiche sull'istanza scelta, senza ridisegnare la
@@ -395,11 +403,9 @@ return html + '</div><div class="foot">' +
     const now = document.getElementById('opt-' + idx);
     if (now) now.classList.add('on');
 
-    const price = document.getElementById('k-price');
     const vs = document.getElementById('k-vs');
     const where = document.getElementById('k-where');
     const rank = document.getElementById('k-rank');
-    if (price) price.textContent = r[3];
     if (vs) {
       // r[5] vuoto = qui costa quanto la piu' economica al mondo
       const best = r[5];
@@ -408,6 +414,9 @@ return html + '</div><div class="foot">' +
       if (where) where.textContent = best ? r[6] : '';
     }
     if (rank) rank.textContent = r[7];
+    // r[8] vuoto = niente sovrapprezzo, e' lei la piu' economica
+    const over = document.getElementById('k-over');
+    if (over) over.textContent = r[8] || '';
   }
 
   // Apre (o ridisegna) la scheda mantenendo l'istanza scelta, se esiste ancora
@@ -695,7 +704,7 @@ return html + '</div><div class="foot">' +
   // Marcatore di versione: se in console non compare questa riga, il browser
   // sta ancora servendo la copia in cache del vecchio index.html
   // (ricarica forzata: Ctrl/Cmd + Shift + R).
-  console.log('[globe] component v6 — click su un pin per aprire la scheda');
+  console.log('[globe] component v9 — click su un pin per aprire la scheda');
 
   sendMessage('streamlit:componentReady', { apiVersion: 1 });
   sendMessage('streamlit:setFrameHeight', { height: HEIGHT });
