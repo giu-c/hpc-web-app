@@ -1076,6 +1076,8 @@ if ss.show_options:
         f"   · Prices include the boot volume ({vol_note});"
     )
 
+# fuckoff!
+
     df, n_max = options_table(stats["aws_regions"], stats["has_oci"], arch_values,
                               vcpu, ram, i_price, vol_size, vol_vpu)
     if df is not None:
