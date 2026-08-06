@@ -4,3 +4,29 @@ primaryColor = "#22c55e"
 backgroundColor = "#05070f"
 secondaryBackgroundColor = "#0e1526"
 textColor = "#e6edf3"
+
+[runner]
+# L'app non usa il "magic" di Streamlit (nessuna espressione nuda da
+# mostrare a schermo: verificato, ogni output passa da una st.*): spegnerlo
+# evita la riscrittura dell'AST dello script a ogni avvio di sessione.
+magicEnabled = false
+# Un'interazione nuova annulla subito lo script ancora in esecuzione invece
+# di aspettarne la fine: è quello che rende reattivi gli slider di vCPU/RAM.
+fastReruns = true
+
+[server]
+# La cartella statica non serve e i caricamenti nemmeno: meno superficie,
+# meno memoria per i file temporanei.
+enableStaticServing = false
+enableWebsocketCompression = true
+# I messaggi grossi (il payload del globo) viaggiano una volta sola e poi
+# per riferimento: 3 minuti di cache bastano per una sessione di uso attivo.
+maxCachedMessageAge = 180
+
+[browser]
+gatherUsageStats = false
+
+[client]
+# In produzione la barra con "Deploy"/"Rerun" è solo peso e distrazione:
+# passare a "viewer" (o "minimal") la riduce.
+toolbarMode = "auto"

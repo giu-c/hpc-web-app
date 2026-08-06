@@ -3,10 +3,18 @@
 <head>
 <meta charset="utf-8" />
 <style>
+  :root {
+    --panel: rgba(9, 13, 24, .94);
+    --line:  rgba(255, 255, 255, .12);
+    --edge:  rgba(94, 231, 223, .34);
+    --txt:   #e8eefc;
+    --muted: #93a1bd;
+  }
   html, body {
     margin: 0; padding: 0; overflow: hidden; background: #04060d;
     font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
   }
+  body { position: relative; }
   #globeViz { width: 100%; height: 100vh; }
 
   /* Priorità di sovrapposizione. Il renderer dei marker riassegna gli
@@ -20,6 +28,8 @@
   .z-hover { z-index: 1000 !important; }
 
   /* --- Marker (pin) ------------------------------------------------------ */
+  /* Colore (--c) e colore dell'alone (--hl) sono variabili CSS sul nodo: si
+     aggiornano senza ricostruire l'elemento quando cambiano i filtri. */
   .mk {
     position: relative;
     transform: translateY(-50%);      /* la punta del pin coincide con lat/lng */
@@ -37,22 +47,24 @@
   /* Coppia migliore (AWS più economica + OCI più vicina): brilla e pulsa.
      Il colore dell'alone/anello arriva da --hl, impostato per provider:
      giallo per l'AWS più economica, rosso per l'OCI più vicina. */
-  .mk.hl .pin {
-    animation: glow 1.4s ease-in-out infinite;
-  }
+  .mk.hl .pin { animation: glow 1.4s ease-in-out infinite; }
   @keyframes glow {
     0%, 100% { filter: drop-shadow(0 0 6px var(--c)); }
     50%      { filter: drop-shadow(0 0 16px var(--hl, #ffd166)) brightness(1.4); }
   }
 
+  /* I due anelli esistono sempre nel DOM e si accendono via classe: cambiare
+     selezione o evidenziazione non ricostruisce più il marker. */
   .ring {
     position: absolute; left: 50%; bottom: -5px;
     width: 26px; height: 26px; margin-left: -13px;
     border: 2px solid rgba(255, 255, 255, .9); border-radius: 50%;
     animation: pulse 1.6s ease-out infinite;
-    pointer-events: none;
+    pointer-events: none; display: none;
   }
   .ring.hl { border-color: var(--hl, #ffd166); }
+  .mk.sel .ring.sel { display: block; }
+  .mk.hl  .ring.hl  { display: block; }
   @keyframes pulse {
     0%   { transform: scale(.35); opacity: .95; }
     100% { transform: scale(1.7); opacity: 0; }
@@ -61,7 +73,7 @@
   .tip {
     position: absolute; bottom: calc(100% + 8px); left: 50%;
     transform: translateX(-50%);
-    background: rgba(9, 13, 24, .94); color: #e8eefc;
+    background: var(--panel); color: var(--txt);
     border: 1px solid rgba(94, 231, 223, .4); border-radius: 8px;
     padding: 5px 9px; font-size: 12px; line-height: 1.45;
     white-space: nowrap; opacity: 0; pointer-events: none;
@@ -73,12 +85,118 @@
   .tip .tmed { color: #ffffff; }
   .tip .tmax { color: #f87171; font-weight: 600; }
 
+  /* --- Scheda della città (popup) ---------------------------------------- */
+  #card {
+    /* fixed = riquadro del componente (siamo dentro un iframe): niente
+       dipendenze dall'altezza calcolata del body */
+    position: fixed; top: 12px; right: 14px; z-index: 2000;
+    width: 382px; max-height: calc(100% - 24px);
+    display: none; flex-direction: column;
+    background: var(--panel); color: var(--txt);
+    border: 1px solid var(--edge); border-radius: 12px;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, .6);
+    font-size: 12px; overflow: hidden;
+  }
+  #card.open { display: flex; animation: cardIn .18s ease-out; }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateX(14px); }
+    to   { opacity: 1; transform: none; }
+  }
+  #card .head {
+    padding: 11px 12px 9px; border-bottom: 1px solid var(--line);
+    flex: 0 0 auto;
+  }
+  #card .title { display: flex; align-items: center; gap: 8px; }
+  #card .title .dot {
+    width: 11px; height: 11px; border-radius: 50%; flex: 0 0 auto;
+    border: 1px solid rgba(255, 255, 255, .55);
+  }
+  #card .title b { font-size: 13px; color: #ffffff; }
+  #card .title .x {
+    margin-left: auto; cursor: pointer; color: var(--muted);
+    font-size: 15px; line-height: 1; padding: 2px 4px; border-radius: 5px;
+  }
+  #card .title .x:hover { color: #ffffff; background: rgba(255, 255, 255, .08); }
+  #card .sub { color: var(--muted); font-size: 11px; margin-top: 4px; }
+
+  #card .kpis { display: flex; gap: 6px; padding: 9px 12px; flex: 0 0 auto; }
+  #card .kpi {
+    flex: 1 1 0; min-width: 0;
+    background: rgba(255, 255, 255, .045);
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 6px 8px;
+  }
+  #card .kpi span { display: block; color: var(--muted); font-size: 10px; }
+  #card .kpi b {
+    display: block; font-size: 13px; margin-top: 2px; color: #ffffff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #card .kpi b.good { color: #4ade80; }
+  #card .kpi.pick { flex: 1.3 1 0; }
+  /* Sotto-riga della statistica (dove si trova l'offerta piu' economica) */
+  #card .kpi em {
+    display: block; font-style: normal; color: var(--muted);
+    font-size: 10px; margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* Menu delle istanze: aspetto coerente con la scheda, non quello di serie
+     del sistema operativo. La freccia e' disegnata come sfondo. */
+  #card .kpi select {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; margin-top: 3px; cursor: pointer;
+    background-color: rgba(255, 255, 255, .06); color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, .16); border-radius: 6px;
+    padding: 3px 20px 3px 6px; font: 600 13px inherit;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+      linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: right 10px center, right 6px center;
+    background-size: 4px 4px, 4px 4px;
+    background-repeat: no-repeat;
+  }
+  #card .kpi select:hover { border-color: rgba(255, 255, 255, .3); }
+  #card .kpi select option { background: #0e1526; color: var(--txt); }
+
+  #card .list { overflow-y: auto; padding: 0 12px 4px; flex: 1 1 auto; }
+  /* Ogni riga e' anche un modo per scegliere l'istanza: cliccarla equivale
+     a sceglierla dal menu qui sopra. */
+  #card .cfg {
+    display: flex; align-items: baseline; gap: 8px; cursor: pointer;
+    padding: 7px 8px; margin: 0 -8px; border-radius: 7px;
+    border-top: 1px solid rgba(255, 255, 255, .07);
+  }
+  #card .cfg:first-child { border-top: 0; }
+  #card .cfg:hover { background: rgba(255, 255, 255, .05); }
+  #card .cfg.on {
+    background: rgba(94, 231, 223, .10);
+    box-shadow: inset 2px 0 0 var(--edge);
+    border-top-color: transparent;
+  }
+  #card .cfg .who { min-width: 0; flex: 1 1 auto; }
+  #card .cfg .who b { color: #ffffff; font-size: 12px; }
+  #card .cfg .who span {
+    display: block; color: var(--muted); font-size: 10.5px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #card .cfg .amt { text-align: right; flex: 0 0 auto; }
+  #card .cfg .amt b { color: #ffffff; font-size: 12px; white-space: nowrap; }
+  #card .cfg .amt span { display: block; color: #7dd3fc; font-size: 10.5px; white-space: nowrap; }
+  #card .empty { padding: 14px 12px 16px; color: var(--muted); line-height: 1.5; }
+  #card .foot {
+    padding: 7px 12px 9px; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 10.5px; line-height: 1.45; flex: 0 0 auto;
+  }
+  #card .list::-webkit-scrollbar { width: 8px; }
+  #card .list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, .16); border-radius: 4px;
+  }
+
   /* --- Legenda ------------------------------------------------------------ */
   #legend {
     position: absolute; left: 14px; bottom: 12px;
     max-width: 290px;
     background: rgba(9, 13, 24, .82);
-    border: 1px solid rgba(255, 255, 255, .12); border-radius: 10px;
+    border: 1px solid var(--line); border-radius: 10px;
     padding: 8px 12px; color: #cfd8ea; font-size: 12px;
     display: flex; flex-direction: column; gap: 5px;
   }
@@ -90,19 +208,21 @@
   }
   /* Anelli della legenda: stessa "grammatica" dei pin pulsanti sul globo */
   #legend .dot.ring-dot { background: transparent; border-width: 2px; }
-  #legend .sep {
-    height: 1px; background: rgba(255, 255, 255, .12); margin: 2px 0;
-  }
+  #legend .sep { height: 1px; background: var(--line); margin: 2px 0; }
   #legend b { color: #ffffff; font-weight: 600; }
-  #legend .note {
-    color: #93a1bd; font-size: 11px; line-height: 1.4;
-    padding-left: 19px;   /* allineata al testo delle righe sopra */
+  #legend .emo {
+    width: 11px; flex: 0 0 auto; text-align: center;
+    font-size: 13px; line-height: 1;   /* stessa colonna dei pallini */
   }
 </style>
 <script src="https://unpkg.com/globe.gl@2"></script>
 </head>
 <body>
 <div id="globeViz"></div>
+
+<!-- Scheda della città: un solo nodo, riempito al click e riusato sempre -->
+<div id="card" role="dialog" aria-label="City details"></div>
+
 <div id="legend">
   <div class="row"><span class="dot" style="background:#a4161a"></span> OCI</div>
   <div class="row"><span class="dot" style="background:#ffa94d"></span> AWS</div>
@@ -116,6 +236,11 @@
     <span class="dot ring-dot" style="border-color:#ff4d5a"></span>
     <span>Pulsing red: <b>OCI - nearest city to ⤴️​</b></span>
   </div>
+  <div class="sep"></div>
+  <div class="row">
+    <span class="emo">&#128070;&#127995;</span>
+    <span>Click a pin for the <b>full list</b></span>
+  </div>
 </div>
 
 <script>
@@ -123,64 +248,250 @@
   function sendMessage(type, data) {
     window.parent.postMessage(Object.assign({ isStreamlitMessage: true, type: type }, data), '*');
   }
-  function sendValue(v) {
-    sendMessage('streamlit:setComponentValue', { value: v, dataType: 'json' });
-  }
 
   // ---- Stato -------------------------------------------------------------
   const HEIGHT = 600;
+  const cardEl = document.getElementById('card');
+
   let world = null;
-  let clickCount = 0;      // nonce: distingue i nuovi click da quelli già gestiti
-  let lastSelected = null;
-  let lastFocus = null;    // zona AWS più economica su cui si è già orientato
-  let zoomTimer = null;    // secondo tempo del volo: lo zoom sui pin evidenziati
-  let firstFly = true;     // primo orientamento dopo l'apertura della pagina
+  let byId = Object.create(null);   // id -> ultimo dato del pin
+  let shared = Object.create(null);  // tabelle spedite una volta e condivise
+  let els = Object.create(null);    // id -> nodo DOM del marker (riusato)
+  let idsSig = '';                  // firma dell'insieme di pin a schermo
+  let selected = null;              // città con la scheda aperta
+  let cardRows = [];                // offerte mostrate nella scheda
+  let cardPick = 0;                 // indice dell'istanza scelta nel menu
+  let wantRotate = false;
+  let lastFocus = null;             // zona AWS più economica già inquadrata
+  let zoomTimer = null;             // secondo tempo del volo: lo zoom
+  let firstFly = true;              // primo orientamento dopo l'apertura
+  let onScreen = true;              // globo visibile nella pagina ospite
+  let everSeen = false;             // ...e almeno una volta lo abbiamo visto
+  let running = true;               // ciclo di rendering attivo
+
+  // Le offerte OCI viaggiano una volta sola in `shared`: il pin le richiama
+  // con `ref` invece di portarsi dietro 47 copie della stessa tabella.
+  function rowsOf(d) {
+    return (d.rows && d.rows.length) ? d.rows : (shared[d.ref] || []);
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
 
   // ---- Marker ------------------------------------------------------------
-  function pinSVG(color) {
-    return `<svg class="pin" width="22" height="30" viewBox="0 0 22 30" style="--c:${color}">
-      <path d="M11 0C4.9 0 0 4.9 0 11c0 8.2 11 19 11 19s11-10.8 11-19C22 4.9 17.1 0 11 0z"
-            fill="${color}" stroke="rgba(255,255,255,.9)" stroke-width="1.4"/>
-      <circle cx="11" cy="10.5" r="4" fill="rgba(8,12,22,.85)"/>
-    </svg>`;
+  // Il nodo si costruisce UNA volta per città e poi si aggiorna sul posto:
+  // cambiare granularità o filtri non ricrea 80 elementi DOM, cambia solo
+  // testi e variabili CSS. La selezione è tutta lato client, quindi non
+  // passa più da Streamlit e non costa un rerun.
+  const PIN_SVG =
+    '<svg class="pin" width="22" height="30" viewBox="0 0 22 30">' +
+      '<path d="M11 0C4.9 0 0 4.9 0 11c0 8.2 11 19 11 19s11-10.8 11-19C22 4.9 17.1 0 11 0z"' +
+      ' fill="var(--c)" stroke="rgba(255,255,255,.9)" stroke-width="1.4"/>' +
+      '<circle cx="11" cy="10.5" r="4" fill="rgba(8,12,22,.85)"/>' +
+    '</svg>';
+
+  function tipHTML(d) {
+    let s = '<b>' + esc(d.name) + '</b><br/>' + esc(d.sub);
+    if (d.t1) s += '<br/><span class="tmin">' + esc(d.t1) + '</span>';
+    if (d.t2) s += '<br/><span class="tmed">' + esc(d.t2) + '</span>';
+    if (d.t3) s += '<br/><span class="tmax">' + esc(d.t3) + '</span>';
+    return s;
+  }
+
+  function updateEl(el, d) {
+    const mk = el.firstElementChild;
+    mk.style.setProperty('--c', d.color);
+    mk.style.setProperty('--hl', d.provider === 'oci' ? '#ff4d5a' : '#ffd166');
+    mk.classList.toggle('hl', !!d.highlight);
+    mk.classList.toggle('sel', d.id === selected);
+    mk.lastElementChild.innerHTML = tipHTML(d);   // .tip
+    el.classList.toggle('z-sel', d.id === selected);
+    el._d = d;                                    // il click legge sempre l'ultimo dato
   }
 
   function makeEl(d) {
     const el = document.createElement('div');
     el.style.pointerEvents = 'auto';
-
     // Priorità di sovrapposizione: AWS > OCI > N/D; il pin selezionato sopra
     // a tutti, l'hover sopra a tutto (classi CSS con !important: vedi sopra).
     el.classList.add(d.z === 30 ? 'z-aws' : d.z === 20 ? 'z-oci' : 'z-nd');
-    if (d.selected) el.classList.add('z-sel');
-    el.addEventListener('mouseenter', function () {
-      el.classList.add('z-hover');
-    });
-    el.addEventListener('mouseleave', function () {
-      el.classList.remove('z-hover');
-    });
+    el.innerHTML =
+      '<div class="mk">' +
+        '<div class="ring sel"></div><div class="ring hl"></div>' +
+        PIN_SVG +
+        '<div class="tip"></div>' +
+      '</div>';
 
-    const cls = 'mk' + (d.selected ? ' sel' : '') + (d.highlight ? ' hl' : '');
-    // Giallo = AWS più economica; rosso = OCI più vicina a quella AWS
-    const hlColor = d.provider === 'oci' ? '#ff4d5a' : '#ffd166';
-    const tipLines = [];
-    if (d.t1) tipLines.push('<span class="tmin">' + d.t1 + '</span>');
-    if (d.t2) tipLines.push('<span class="tmed">' + d.t2 + '</span>');
-    if (d.t3) tipLines.push('<span class="tmax">' + d.t3 + '</span>');
-    el.innerHTML = `
-      <div class="${cls}" style="--hl:${hlColor}">
-        ${d.selected ? '<div class="ring"></div>' : ''}
-        ${d.highlight ? '<div class="ring hl"></div>' : ''}
-        ${pinSVG(d.color)}
-        <div class="tip"><b>${d.name}</b><br/>${d.sub}<br/>${tipLines.join('<br/>')}</div>
-      </div>`;
-    el.querySelector('.mk').addEventListener('click', function (ev) {
-      ev.stopPropagation();
-      clickCount += 1;
-      sendValue({ id: d.id, n: clickCount });
-    });
+    el.setAttribute('data-pin', d.id);   // il click e' delegato: vedi sotto
+    el.addEventListener('mouseenter', function () { el.classList.add('z-hover'); });
+    el.addEventListener('mouseleave', function () { el.classList.remove('z-hover'); });
+
+    els[d.id] = el;
+    updateEl(el, d);
     return el;
   }
+
+  // ---- Scheda della città ------------------------------------------------
+  function cardHTML(d) {
+    const dot = '<span class="dot" style="background:' + esc(d.color) + '"></span>';
+    let html =
+      '<div class="head">' +
+        '<div class="title">' + dot + '<b>' + esc(d.name) + '</b>' +
+          '<span class="x" data-close="1" title="Close">&#10005;</span></div>' +
+        '<div class="sub">' + esc(d.sub) + '</div>' +
+      '</div>';
+
+    // Le offerte OCI arrivano una volta sola in `shared` (sono identiche in
+    // tutte le citta' OCI): il pin le richiama con `ref`.
+    const rows = rowsOf(d);
+    if (!d.avail || !rows.length) {
+      return html + '<div class="empty">No offer for this architecture and shape ' +
+             'combination in this city: try widening the filters.</div>';
+    }
+
+    // Le tre statistiche non sono piu' della citta' ma dell'ISTANZA scelta nel
+    // menu: si riempiono in applyPick, qui si prepara solo l'impalcatura.
+    let opts = '';
+    for (let i = 0; i < rows.length; i++) {
+      opts += '<option value="' + i + '">' + esc(rows[i][0]) + '</option>';
+    }
+    html +=
+      '<div class="kpis">' +
+        '<div class="kpi pick"><span>Instance</span>' +
+          '<select id="pick" title="Choose an instance">' + opts + '</select>' +
+          '<b id="k-price"></b></div>' +
+        '<div class="kpi"><span>Cheapest anywhere</span>' +
+          '<b id="k-vs"></b><em id="k-where"></em></div>' +
+        '<div class="kpi"><span>Ranking</span><b id="k-rank"></b></div>' +
+      '</div><div class="list">';
+
+    // rows: [family, processor, arch, price, N-price, best, dove, posizione]
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      html +=
+        '<div class="cfg" id="opt-' + i + '" data-idx="' + i + '">' +
+          '<div class="who"><b>' + esc(r[0]) + '</b>' +
+            '<span>' + esc(r[1]) + ' · ' + esc(r[2]) + '</span></div>' +
+          '<div class="amt"><b>' + esc(r[3]) + '</b>' +
+            '<span>N ' + esc(r[4]) + '</span></div>' +
+        '</div>';
+    }
+return html + '</div><div class="foot">' +
+       ' · ' + rows.length + ' configuration' + (rows.length === 1 ? '' : 's') +
+       ' · boot volume included' +
+       '<br/> · N = price normalized on performance</div>';
+  }
+
+  // Aggiorna le tre statistiche sull'istanza scelta, senza ridisegnare la
+  // scheda: cambiare voce nel menu non fa sfarfallare l'elenco sotto.
+  function applyPick(idx) {
+    const r = cardRows[idx];
+    if (!r) return;
+    const prev = document.getElementById('opt-' + cardPick);
+    if (prev) prev.classList.remove('on');
+    cardPick = idx;
+    const now = document.getElementById('opt-' + idx);
+    if (now) now.classList.add('on');
+
+    const price = document.getElementById('k-price');
+    const vs = document.getElementById('k-vs');
+    const where = document.getElementById('k-where');
+    const rank = document.getElementById('k-rank');
+    if (price) price.textContent = r[3];
+    if (vs) {
+      // r[5] vuoto = qui costa quanto la piu' economica al mondo
+      const best = r[5];
+      vs.textContent = best || 'Cheapest ✓';
+      vs.className = best ? '' : 'good';
+      if (where) where.textContent = best ? r[6] : '';
+    }
+    if (rank) rank.textContent = r[7];
+  }
+
+  // Apre (o ridisegna) la scheda mantenendo l'istanza scelta, se esiste ancora
+  function openCard(d, idx) {
+    cardRows = rowsOf(d);
+    cardEl.innerHTML = cardHTML(d);
+    cardEl.classList.add('open');
+    if (!cardRows.length) { cardPick = 0; return; }
+    cardPick = Math.min(Math.max(idx | 0, 0), cardRows.length - 1);
+    const menu = document.getElementById('pick');
+    if (menu) {
+      menu.value = String(cardPick);
+      menu.addEventListener('change', function () { applyPick(+menu.value); });
+    }
+    applyPick(cardPick);
+  }
+
+  function select(id) {
+    const d = id && byId[id];
+    if (!d) {
+      console.warn('[globe] click su', id, '- nessun dato per questo pin');
+      return;
+    }
+    console.log('[globe] scheda aperta:', id);
+    const prev = selected;
+    selected = id;
+    if (prev && els[prev]) els[prev].firstElementChild.classList.remove('sel');
+    if (prev && els[prev]) els[prev].classList.remove('z-sel');
+    if (els[id]) {
+      els[id].firstElementChild.classList.add('sel');
+      els[id].classList.add('z-sel');
+    }
+    openCard(d, 0);            // di default la piu' economica: e' la prima
+    world.controls().autoRotate = false;
+    clearTimeout(zoomTimer);
+    world.pointOfView({ lat: d.lat, lng: d.lng, altitude: 1.6 }, 900);
+  }
+
+  function closeCard() {
+    if (selected && els[selected]) {
+      els[selected].firstElementChild.classList.remove('sel');
+      els[selected].classList.remove('z-sel');
+    }
+    selected = null;
+    cardEl.classList.remove('open');
+    cardEl.innerHTML = '';
+    world.controls().autoRotate = wantRotate;
+  }
+
+  // Un solo ascoltatore per tutta la pagina, in fase di CATTURA: intercetta
+  // il click prima che chiunque altro possa fermarlo, e funziona anche se
+  // globe.gl ricrea i nodi dei marker sotto di noi. Il pin si riconosce
+  // dall'attributo data-pin, non serve conservare riferimenti agli elementi.
+  let pinDownAt = 0;
+  function pinFrom(ev) {
+    const t = ev.target;
+    return (t && t.closest) ? t.closest('[data-pin]') : null;
+  }
+  document.addEventListener('pointerdown', function (ev) {
+    if (pinFrom(ev)) pinDownAt = Date.now();
+  }, true);
+  document.addEventListener('click', function (ev) {
+    const el = pinFrom(ev);
+    if (!el) return;
+    ev.stopPropagation();
+    select(el.getAttribute('data-pin'));
+  }, true);
+
+  cardEl.addEventListener('click', function (ev) {
+    if (!ev.target.closest) return;
+    // closest: chiude anche se il click cade su un figlio della X
+    if (ev.target.closest('[data-close]')) { closeCard(); return; }
+    // Una riga dell'elenco vale come una scelta dal menu, e viceversa
+    const row = ev.target.closest('[data-idx]');
+    if (row) {
+      const idx = +row.getAttribute('data-idx');
+      const menu = document.getElementById('pick');
+      if (menu) menu.value = String(idx);
+      applyPick(idx);
+    }
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && selected) closeCard();
+  });
 
   // ---- Inquadratura: centro e distanza dei pin evidenziati ---------------
   // Media dei versori (invece della media di lat/lng): resta corretta anche a
@@ -219,8 +530,7 @@
     // tutti con un margine comodo. Sotto la soglia comanda il minimo 1.25.
     const th = maxDeg * Math.PI / 180;
     const fit = Math.cos(th) + Math.sin(th) / Math.tan(19 * Math.PI / 180) - 1;
-    const alt = Math.min(1.85, Math.max(1.25, fit));
-    return { lat: lat, lng: lng, altitude: alt };
+    return { lat: lat, lng: lng, altitude: Math.min(1.85, Math.max(1.25, fit)) };
   }
 
   // Volo in due tempi: prima l'orientamento, poi un leggero zoom
@@ -235,6 +545,20 @@
       const pov = spin ? world.pointOfView() : to;
       world.pointOfView({ lat: pov.lat, lng: pov.lng, altitude: to.altitude }, dur2);
     }, dur1 + 150);
+  }
+
+  // ---- Ciclo di rendering: acceso solo quando serve davvero --------------
+  // Un globo WebGL disegna 60 volte al secondo anche se nessuno lo guarda.
+  // Qui si ferma quando la scheda del browser passa in secondo piano o
+  // quando il globo esce dalla vista (per esempio scorrendo fino alla
+  // tabella "Available Options"): CPU e GPU tornano a zero.
+  function setRunning(on) {
+    if (on === running || !world) return;
+    running = on;
+    if (on) world.resumeAnimation(); else world.pauseAnimation();
+  }
+  function refreshRunning() {
+    setRunning((onScreen || !everSeen) && !document.hidden);
   }
 
   // ---- Globo -------------------------------------------------------------
@@ -254,50 +578,98 @@
       .htmlAltitude(0.015)
       .htmlElement(makeEl);
 
+    // Tutto quello che segue è rifinitura: se una qualunque di queste chiamate
+    // non esistesse in questa versione di globe.gl, un'eccezione qui dentro
+    // interromperebbe initGlobe a metà e il resto del componente resterebbe
+    // senza ascoltatori. Meglio perdere una rifinitura che il click.
+    try {
+      // Su schermi ad alta densità il costo per fotogramma cresce con il
+      // quadrato del pixel ratio: oltre 1.5 la differenza non si vede.
+      world.renderer().setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    } catch (e) { console.warn('[globe] pixelRatio non impostato:', e); }
+
     // Nasconde i pin quando finiscono sul lato non visibile del globo
     // (guardia: la proprietà esiste nelle versioni recenti di globe.gl)
-    if (typeof world.htmlElementVisibilityModifier === 'function') {
-      world.htmlElementVisibilityModifier(function (el, isVisible) {
-        el.style.opacity = isVisible ? 1 : 0;
-        el.style.pointerEvents = isVisible ? 'auto' : 'none';
-      });
-    }
+    try {
+      if (typeof world.htmlElementVisibilityModifier === 'function') {
+        world.htmlElementVisibilityModifier(function (el, isVisible) {
+          el.style.opacity = isVisible ? 1 : 0;
+          el.style.pointerEvents = isVisible ? 'auto' : 'none';
+        });
+      }
+    } catch (e) { console.warn('[globe] visibilityModifier non attivo:', e); }
 
-    // Click sull'oceano/terra "vuota" -> deseleziona
+    // Click sull'oceano/terra "vuota" -> chiude la scheda. globe.gl reagisce
+    // al 'pointerup' sul contenitore, che scatta PRIMA del 'click' sul marker:
+    // senza questa guardia la scheda si apriva e si richiudeva all'istante.
     world.onGlobeClick(function () {
-      clickCount += 1;
-      sendValue({ id: null, n: clickCount });
+      if (Date.now() - pinDownAt < 500) return;
+      closeCard();
     });
 
     world.pointOfView({ lat: 25, lng: 10, altitude: 2.2 }, 0);
     world.controls().enableDamping = true;
 
+    let resizeRaf = 0;
     window.addEventListener('resize', function () {
-      world.width(window.innerWidth);
+      cancelAnimationFrame(resizeRaf);
+      resizeRaf = requestAnimationFrame(function () { world.width(window.innerWidth); });
     });
+
+    document.addEventListener('visibilitychange', refreshRunning);
+    try {
+      if (window.IntersectionObserver) {
+        new IntersectionObserver(function (entries) {
+          onScreen = entries[0].isIntersecting;
+          if (onScreen) everSeen = true;
+          refreshRunning();
+        }, { threshold: 0 }).observe(document.getElementById('globeViz'));
+      }
+    } catch (e) { console.warn('[globe] auto-pausa non attiva:', e); }
   }
 
-  // ---- Render: chiamato da Streamlit a ogni rerun (filtri, click, ...) ----
+  // ---- Render: chiamato da Streamlit a ogni rerun (filtri, toggle, ...) ---
   function render(args) {
     if (!world) initGlobe();
 
-    world.htmlElementsData(args.pins || []);
-
-    const controls = world.controls();
-    controls.autoRotate = !!args.rotate && !args.selected;
-    controls.autoRotateSpeed = 0.55;
-
     const pins = args.pins || [];
+    shared = args.shared || Object.create(null);
+    byId = Object.create(null);
+    let sig = '';
+    for (let i = 0; i < pins.length; i++) {
+      byId[pins[i].id] = pins[i];
+      sig += pins[i].id + ',';
+    }
 
-    if (args.selected && args.selected !== lastSelected) {
-      // Vola sulla città appena selezionata
-      clearTimeout(zoomTimer);
-      const r = pins.find(function (x) { return x.id === args.selected; });
-      if (r) world.pointOfView({ lat: r.lat, lng: r.lng, altitude: 1.6 }, 900);
-    } else if (!args.selected && args.focus && args.focus !== lastFocus) {
+    if (sig !== idsSig) {
+      // È cambiato l'INSIEME delle città: globe.gl ricostruisce il livello dei
+      // marker. La cache dei nodi si azzera, altrimenti gli restituiremmo
+      // elementi che lui considera già smontati.
+      idsSig = sig;
+      els = Object.create(null);
+      world.htmlElementsData(pins);
+    } else {
+      // Stesse città, dati diversi (granularità, volume, prezzi): aggiornamento
+      // sul posto, zero lavoro per globe.gl e zero nodi ricreati.
+      for (let i = 0; i < pins.length; i++) {
+        if (els[pins[i].id]) updateEl(els[pins[i].id], pins[i]);
+      }
+    }
+
+    // La città aperta potrebbe non esistere più (o avere prezzi nuovi)
+    if (selected) {
+      if (!byId[selected]) closeCard();
+      else openCard(byId[selected], cardPick);
+    }
+
+    wantRotate = !!args.rotate;
+    world.controls().autoRotate = wantRotate && !selected;
+    world.controls().autoRotateSpeed = 0.55;
+
+    if (!selected && args.focus && args.focus !== lastFocus) {
       // Orienta il globo sulla zona con il prezzo AWS più basso, poi stringe
       // l'inquadratura sui pin evidenziati (AWS più economica + OCI vicina).
-      const f = pins.find(function (x) { return x.id === args.focus; });
+      const f = byId[args.focus];
       if (f) {
         const from = { lat: f.lat, lng: f.lng, altitude: 1.9 };
         if (firstFly) {
@@ -312,7 +684,6 @@
         firstFly = false;
       }
     }
-    lastSelected = args.selected || null;
     lastFocus = args.focus || null;
   }
 
@@ -320,6 +691,11 @@
     const msg = ev.data;
     if (msg && msg.type === 'streamlit:render') render(msg.args || {});
   });
+
+  // Marcatore di versione: se in console non compare questa riga, il browser
+  // sta ancora servendo la copia in cache del vecchio index.html
+  // (ricarica forzata: Ctrl/Cmd + Shift + R).
+  console.log('[globe] component v6 — click su un pin per aprire la scheda');
 
   sendMessage('streamlit:componentReady', { apiVersion: 1 });
   sendMessage('streamlit:setFrameHeight', { height: HEIGHT });
