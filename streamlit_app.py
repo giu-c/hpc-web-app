@@ -988,7 +988,7 @@ st.title("Virtual Machines, Around the World 🔭")
 st.caption(
     f" · {vcpu} vCPU · {ram} GB RAM · [ {arch_note} ] · "
     f"{len(ss.city_sel)}/{len(city_options)} cities "
-    f"in {len(groups)} of {len(GROUP_ORDER)} regions. · {gran} pricing (updated July 2026)"
+    f"in {len(groups)} of {len(GROUP_ORDER)} regions · {gran} pricing (updated July 2026)"
 )
 
 col_globe, col_stats = st.columns([2.5, 1], gap="large")
