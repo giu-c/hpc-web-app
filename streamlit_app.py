@@ -802,13 +802,15 @@ def payload(groups, city_ids, arch_values, vcpu, ram, i_price, suffix,
 @st.cache_data(show_spinner=False, max_entries=16)
 def options_table(aws_regions, include_oci, arch_values, vcpu, ram, i_price,
                   vol_size, vol_vpu):
-    """Righe della tabella 'Available Options', già in DataFrame: si ricostruisce
-    solo quando cambiano i filtri, non a ogni apertura del pannello."""
+    """Righe della tabella 'Available Options', già in DataFrame con 'Value Index':
+    si ricostruisce solo quando cambiano i filtri (versione v2)."""
     data = load_all(str(DATA_DIR))
     rows = options_rows(data["index"], data["volumes"], aws_regions, include_oci,
                         arch_values, vcpu, ram, i_price, vol_size, vol_vpu)
-    return (pd.DataFrame(rows), max((r["N-Price"] for r in rows), default=0.0)) \
-        if rows else (None, 0.0)
+    if not rows:
+        return None, 0.0
+    df = pd.DataFrame(rows)
+    return df, max((r["N-Price"] for r in rows), default=0.0)
 
 
 DATA = load_all(str(DATA_DIR))
