@@ -368,49 +368,42 @@ def options_rows(index, volumes, aws_regions, include_oci, arch_values,
     senza ripetizioni per città) + per AWS l'offerta più economica di OGNI
     family cercata tra tutte le città selezionate (la Region indica dove).
     Entrambi i prezzi comprendono il volume di avvio; la classifica segue
-    in ordine decrescente la percentuale 'Value Index' = (N-Price / Price) * 100
-    (infinito se Price == 0)."""
+    il prezzo normalizzato (N-Price) in ordine crescente."""
     rows = []
-    if include_oci:
         cost = volume_cost(volumes, "oci", "global", vol_size, vol_vpu, i_price)
         for o in city_offers(index, "oci", "global", vcpu, ram, arch_values,
                              i_price, cost):
-            v_idx = (o.n_price / o.price * 100.0) if o.price > 0 else float("inf")
+            perf_idx = round(o.price / o.n_price * 100) if o.n_price > 0 else 0
             rows.append({"Provider": "OCI", "Region": "global",
                          "Family": o.family, "Architecture": o.arch,
-                         "Processor": o.processor,
                          "Price": o.price, "N-Price": o.n_price,
-                         "Value Index": v_idx})
+                         "Performance Index": perf_idx})
 
     best_by_family = {}
     for region in aws_regions:
-        # L'EBS costa diversamente da regione a regione: il confronto tra
         # città si fa quindi sul totale istanza + disco di quella regione.
         cost = volume_cost(volumes, "aws", region, vol_size, vol_vpu, i_price)
         for o in city_offers(index, "aws", region, vcpu, ram, arch_values,
                              i_price, cost):
             cur = best_by_family.get(o.family)
             if cur is None or (o.n_price, region) < (cur["N-Price"], cur["Region"]):
-                v_idx = (o.n_price / o.price * 100.0) if o.price > 0 else float("inf")
+                perf_idx = round(o.price / o.n_price * 100) if o.n_price > 0 else 0
                 best_by_family[o.family] = {
                     "Provider": "AWS", "Region": region, "Family": o.family,
                     "Architecture": o.arch, "Processor": o.processor,
                     "Price": o.price, "N-Price": o.n_price,
-                    "Value Index": v_idx}
     rows += best_by_family.values()
 
     # Codici AWS -> nomi estesi ("ap-south-1" -> "Asia Pacific (Mumbai)");
     # va fatto DOPO la scelta per family, che spareggia sui codici.
     for r in rows:
-        r["Region"] = AWS_REGION_NAME.get(r["Region"], r["Region"])
-    rows.sort(key=lambda r: (-r["Value Index"], r["N-Price"], r["Price"], r["Provider"], r["Family"]))
+    rows.sort(key=lambda r: (r["N-Price"], r["Price"], r["Provider"], r["Family"]))
     return rows
 
 
 def build_payload(data, groups, city_ids, arch_values, vcpu, ram,
                   i_price, suffix, vol_size, vol_vpu):
     """Pin per il globo + statistiche per il pannello. Ogni prezzo comprende
-    il volume di avvio scelto (per AWS quello della regione della città).
 
     Il pin selezionato NON entra qui: dipende dal click, non dai filtri, e
     tenerlo fuori rende il risultato memoizzabile (vedi payload()) e valido
@@ -1094,24 +1087,21 @@ if ss.show_options:
                 "N-Price": st.column_config.ProgressColumn(
                     f"N-Price ({suffix.lstrip('/')})", format=num_fmt,
                     min_value=0.0, max_value=float(n_max or 1.0)),
-                "Value Index": st.column_config.NumberColumn(
-                    "Value Index", format="%.2f%%"),
+                "Performance Index": st.column_config.NumberColumn(
+                    "Performance Index", format="%d"),
             },
         )
         st.caption(
             "\n   · OCI: same offers available across all cities\n"
             "\n   · AWS: cheapest offer per family among selected cities\n"
-            "\n   · Sorted in descending order by Value Index (N-Price / Price %)"
+            "\n   · Sorted by normalized price (N-Price)"
         )
-    else:
-        st.caption("No options available with the current filters.")
 
     # All'apertura, scorri dolcemente fino alla tabella (una volta sola)
     if ss.scroll_opts:
         ss.scroll_opts = False
         components.html(
             """<script>
-              setTimeout(() => {
                 const el = window.parent.document.getElementById('opzioni-anchor');
                 if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }, 250);
