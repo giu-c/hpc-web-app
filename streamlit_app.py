@@ -370,33 +370,48 @@ def options_rows(index, volumes, aws_regions, include_oci, arch_values,
     Entrambi i prezzi comprendono il volume di avvio; la classifica segue
     il prezzo normalizzato (N-Price) in ordine crescente."""
     rows = []
+    if include_oci:
         cost = volume_cost(volumes, "oci", "global", vol_size, vol_vpu, i_price)
         for o in city_offers(index, "oci", "global", vcpu, ram, arch_values,
                              i_price, cost):
-            perf_idx = round(o.price / o.n_price * 100) if o.n_price > 0 else 0
+            if "Ampere Altra Q80-30" in o.processor:
+                perf_idx = 115
+            elif o.n_price > 0:
+                perf_idx = round(o.price / o.n_price * 100)
+            else:
+                perf_idx = 0
             rows.append({"Provider": "OCI", "Region": "global",
                          "Family": o.family, "Architecture": o.arch,
+                         "Processor": o.processor,
                          "Price": o.price, "N-Price": o.n_price,
                          "Performance Index": perf_idx})
 
     best_by_family = {}
     for region in aws_regions:
+        # L'EBS costa diversamente da regione a regione: il confronto tra
         # città si fa quindi sul totale istanza + disco di quella regione.
         cost = volume_cost(volumes, "aws", region, vol_size, vol_vpu, i_price)
         for o in city_offers(index, "aws", region, vcpu, ram, arch_values,
                              i_price, cost):
             cur = best_by_family.get(o.family)
             if cur is None or (o.n_price, region) < (cur["N-Price"], cur["Region"]):
-                perf_idx = round(o.price / o.n_price * 100) if o.n_price > 0 else 0
+                if "Ampere Altra Q80-30" in o.processor:
+                    perf_idx = 115
+                elif o.n_price > 0:
+                    perf_idx = round(o.price / o.n_price * 100)
+                else:
+                    perf_idx = 0
                 best_by_family[o.family] = {
                     "Provider": "AWS", "Region": region, "Family": o.family,
                     "Architecture": o.arch, "Processor": o.processor,
                     "Price": o.price, "N-Price": o.n_price,
+                    "Performance Index": perf_idx}
     rows += best_by_family.values()
 
     # Codici AWS -> nomi estesi ("ap-south-1" -> "Asia Pacific (Mumbai)");
     # va fatto DOPO la scelta per family, che spareggia sui codici.
     for r in rows:
+        r["Region"] = AWS_REGION_NAME.get(r["Region"], r["Region"])
     rows.sort(key=lambda r: (r["N-Price"], r["Price"], r["Provider"], r["Family"]))
     return rows
 
