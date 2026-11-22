@@ -3,11 +3,12 @@ name: Wake Up Streamlit (Playwright)
 on:
   schedule:
     - cron: '0 */6 * * *' # Ogni 6 ore
-  workflow_dispatch:      # Permette l'avvio manuale per test
+  workflow_dispatch:
 
 jobs:
   keep-alive:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -16,6 +17,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install Playwright
         run: |
@@ -24,25 +26,46 @@ jobs:
 
       - name: Run Headless Browser
         run: |
-          node -e "
+          node - << 'EOF'
           const { chromium } = require('playwright');
+
+          const URL = 'https://cloudbattle.streamlit.app';
+          const MAX_ATTEMPTS = 3;
+
           (async () => {
             const browser = await chromium.launch({ headless: true });
-            const page = await browser.newPage();
-            console.log('Navigazione verso l' + ' app...');
+
             try {
-              // URL aggiornato: cloudbattle.streamlit.app
-              await page.goto('https://cloudbattle.streamlit.app/', { waitUntil: 'networkidle', timeout: 60000 });
-              console.log('Pagina caricata correttamente');
-              
-              // Aspettiamo che il WebSocket di Streamlit si stabilizzi
-              await page.waitForTimeout(10000); 
-              console.log('Sessione stabilita. App sveglia!');
-            } catch (e) {
-              console.error('Errore durante il caricamento:', e.message);
-              process.exit(1);
+              for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+                const page = await browser.newPage();
+                page.setDefaultTimeout(90000);
+
+                console.log(`Tentativo ${attempt}/${MAX_ATTEMPTS} - Navigazione verso ${URL}...`);
+                try {
+                  await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 90000 });
+
+                  // Attende che il runtime/WebSocket di Streamlit si inizializzi
+                  await page.waitForTimeout(15000);
+
+                  const title = await page.title();
+                  console.log(`Pagina caricata. Titolo: "${title}". App sveglia!`);
+                  await page.close();
+                  return;
+                } catch (err) {
+                  console.warn(`Tentativo ${attempt} fallito: ${err.message}`);
+                  await page.close().catch(() => {});
+                  if (attempt === MAX_ATTEMPTS) {
+                    throw err;
+                  }
+                  console.log('Attendo 15 secondi prima di riprovare...');
+                  await new Promise((r) => setTimeout(r, 15000));
+                }
+              }
+            } finally {
+              await browser.close();
             }
-            await browser.close();
-          })();
-          "
-  # ...
+          })().catch((err) => {
+            console.error('Errore definitivo durante il wake-up:', err.message);
+            process.exit(1);
+          });
+          EOF
