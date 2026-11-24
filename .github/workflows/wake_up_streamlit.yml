@@ -9,20 +9,15 @@ jobs:
   keep-alive:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    container:
+      image: mcr.microsoft.com/playwright:v1.52.0-noble
+      options: --ipc=host
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Playwright
-        run: |
-          npm install playwright
-          npx playwright install chromium --with-deps
+      - name: Install Playwright JS library
+        run: npm install --no-save playwright@1.52.0
 
       - name: Run Headless Browser
         run: |
@@ -44,11 +39,30 @@ jobs:
                 try {
                   await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 90000 });
 
-                  // Attende che il runtime/WebSocket di Streamlit si inizializzi
-                  await page.waitForTimeout(15000);
+                  // Streamlit Community Cloud incapsula l'app dentro un iframe
+                  const appFrame = page.frameLocator('iframe[title="streamlitApp"]');
 
-                  const title = await page.title();
-                  console.log(`Pagina caricata. Titolo: "${title}". App sveglia!`);
+                  // Controlla se compare il pulsante di riattivazione (nella pagina o nell'iframe)
+                  const wakeButton = page
+                    .locator('button:has-text("Yes, get this app back up!")')
+                    .or(appFrame.locator('button:has-text("Yes, get this app back up!")'));
+
+                  if (await wakeButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+                    console.log('App in sleep rilevata, clicco sul pulsante di risveglio...');
+                    await wakeButton.click();
+                  }
+
+                  // Attende che il container principale di Streamlit sia renderizzato e visibile
+                  const appContainer = page
+                    .locator('[data-testid="stAppViewContainer"]')
+                    .or(appFrame.locator('[data-testid="stAppViewContainer"]'));
+
+                  await appContainer.waitFor({ state: 'visible', timeout: 75000 });
+
+                  // Breve attesa extra per consolidare la connessione WebSocket attiva
+                  await page.waitForTimeout(3000);
+
+                  console.log('Container [data-testid="stAppViewContainer"] visibile. App attiva!');
                   await page.close();
                   return;
                 } catch (err) {
