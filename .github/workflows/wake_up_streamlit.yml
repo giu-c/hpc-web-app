@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Install Playwright JS library
-        run: npm install --no-save playwright@1.52.0
+        run: npm install --no-save --no-audit --no-fund playwright@1.52.0
 
       - name: Run Headless Browser
         run: |
@@ -26,53 +26,70 @@ jobs:
 
           const URL = 'https://cloudbattle.streamlit.app';
           const MAX_ATTEMPTS = 3;
+          const RETRY_DELAY_MS = 10000;
+
+          // Attende il primo locator visibile tra pagina principale e iframe
+          function waitForFirstVisible(locators, timeout) {
+            return Promise.any(
+              locators.map(async (locator) => {
+                await locator.waitFor({ state: 'visible', timeout });
+                return locator;
+              })
+            );
+          }
 
           (async () => {
             const browser = await chromium.launch({ headless: true });
 
             try {
               for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-                const page = await browser.newPage();
-                page.setDefaultTimeout(90000);
+                const context = await browser.newContext();
+                const page = await context.newPage();
 
                 console.log(`Tentativo ${attempt}/${MAX_ATTEMPTS} - Navigazione verso ${URL}...`);
                 try {
-                  await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 90000 });
+                  await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 45000 });
 
-                  // Streamlit Community Cloud incapsula l'app dentro un iframe
                   const appFrame = page.frameLocator('iframe[title="streamlitApp"]');
 
-                  // Controlla se compare il pulsante di riattivazione (nella pagina o nell'iframe)
-                  const wakeButton = page
-                    .locator('button:has-text("Yes, get this app back up!")')
-                    .or(appFrame.locator('button:has-text("Yes, get this app back up!")'));
+                  // 1. Controlla se l'app è ibernata e clicca sul pulsante di risveglio
+                  const wakeButtons = [
+                    page.getByRole('button', { name: /get this app back up/i }),
+                    appFrame.getByRole('button', { name: /get this app back up/i }),
+                  ];
 
-                  if (await wakeButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+                  const wakeBtn = await waitForFirstVisible(wakeButtons, 6000).catch(() => null);
+                  if (wakeBtn) {
                     console.log('App in sleep rilevata, clicco sul pulsante di risveglio...');
-                    await wakeButton.click();
+                    await wakeBtn.click();
                   }
 
-                  // Attende che il container principale di Streamlit sia renderizzato e visibile
-                  const appContainer = page
-                    .locator('[data-testid="stAppViewContainer"]')
-                    .or(appFrame.locator('[data-testid="stAppViewContainer"]'));
+                  // 2. Attende il caricamento del container principale di Streamlit
+                  const appContainers = [
+                    page.locator('[data-testid="stAppViewContainer"]'),
+                    appFrame.locator('[data-testid="stAppViewContainer"]'),
+                  ];
 
-                  await appContainer.waitFor({ state: 'visible', timeout: 75000 });
+                  await waitForFirstVisible(appContainers, 60000);
 
-                  // Breve attesa extra per consolidare la connessione WebSocket attiva
+                  // Breve attesa per consolidare la connessione WebSocket
                   await page.waitForTimeout(3000);
 
-                  console.log('Container [data-testid="stAppViewContainer"] visibile. App attiva!');
-                  await page.close();
+                  console.log('App attiva e container renderizzato con successo!');
                   return;
                 } catch (err) {
-                  console.warn(`Tentativo ${attempt} fallito: ${err.message}`);
-                  await page.close().catch(() => {});
+                  const reason = err instanceof AggregateError
+                    ? err.errors.map((e) => e.message).join(' | ')
+                    : err.message;
+                  console.warn(`Tentativo ${attempt} fallito: ${reason}`);
+
                   if (attempt === MAX_ATTEMPTS) {
-                    throw err;
+                    throw new Error(reason);
                   }
-                  console.log('Attendo 15 secondi prima di riprovare...');
-                  await new Promise((r) => setTimeout(r, 15000));
+                  console.log(`Attendo ${RETRY_DELAY_MS / 1000} secondi prima di riprovare...`);
+                  await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+                } finally {
+                  await context.close().catch(() => {});
                 }
               }
             } finally {
